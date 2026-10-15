@@ -27,7 +27,7 @@ export function crearApp() {
   app.set('trust proxy', 1);
 
   app.use(helmet());
-  app.use(cors({ origin: env.corsOrigin, exposedHeaders: ['X-Token-Renovado'] }));
+  app.use(cors({ origin: env.corsOrigin, exposedHeaders: ['X-Token-Renovado', 'Content-Disposition'] }));
   app.use(express.json({ limit: '100kb' }));
   if (env.nodeEnv !== 'test') app.use(morgan(env.nodeEnv === 'production' ? 'combined' : 'dev'));
 
