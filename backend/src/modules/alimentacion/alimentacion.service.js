@@ -49,9 +49,27 @@ export async function opciones() {
  * Todo ocurre en una transacción: si un insumo no tiene stock suficiente
  * o ya se cargó ese día, no se guarda nada.
  */
-export async function registrar({ loteId, fecha = hoy(), items }, usuarioId) {
+export async function registrar({ loteId, fecha = hoy(), items, operacionId }, usuarioId) {
   if (fecha > hoy()) throw new AppError(400, 'La fecha no puede ser futura');
   const itemsConKg = items.filter((i) => i.kg > 0);
+
+  // Reintento de una operación ya registrada (sincronización offline): se devuelve lo guardado.
+  if (operacionId) {
+    const previos = await prisma.registroAlimentacion.findMany({
+      where: { operacionId },
+      include: { insumo: { select: { nombre: true, tipo: true } }, lote: { select: { id: true, nombre: true } } },
+    });
+    if (previos.length) {
+      return {
+        lote: previos[0].lote,
+        fecha: previos[0].fecha,
+        registros: previos.map(({ lote: _lote, ...r }) => r),
+        costoDia: redondear(previos.reduce((t, r) => t + Number(r.costo), 0), 2),
+        alertasStock: [],
+        repetido: true,
+      };
+    }
+  }
 
   return prisma.$transaction(async (tx) => {
     const lote = await obtenerLote(loteId, { activo: true, db: tx });
@@ -85,7 +103,7 @@ export async function registrar({ loteId, fecha = hoy(), items }, usuarioId) {
       const precioKg = Number(insumo.precioKg);
       registros.push(
         await tx.registroAlimentacion.create({
-          data: { loteId, insumoId, fecha, kg, precioKg, costo: costoAlimentacion(kg, precioKg), usuarioId },
+          data: { loteId, insumoId, fecha, kg, precioKg, costo: costoAlimentacion(kg, precioKg), usuarioId, operacionId },
           include: { insumo: { select: { nombre: true, tipo: true } } },
         }),
       );

@@ -125,15 +125,18 @@ model CompraInsumo {
 }
 
 model RegistroAlimentacion {
-  id        Int      @id @default(autoincrement())
-  loteId    Int      @map("lote_id")
-  insumoId  Int      @map("insumo_id")
-  fecha     DateTime @db.Date
-  kg        Decimal  @db.Decimal(10, 2)
-  precioKg  Decimal  @map("precio_kg") @db.Decimal(12, 2)
-  costo     Decimal  @db.Decimal(14, 2)
-  usuarioId Int      @map("usuario_id")
-  createdAt DateTime @default(now()) @map("created_at")
+  id          Int      @id @default(autoincrement())
+  loteId      Int      @map("lote_id")
+  insumoId    Int      @map("insumo_id")
+  fecha       DateTime @db.Date
+  kg          Decimal  @db.Decimal(10, 2)
+  precioKg    Decimal  @map("precio_kg") @db.Decimal(12, 2)
+  costo       Decimal  @db.Decimal(14, 2)
+  usuarioId   Int      @map("usuario_id")
+  // Identificador del envío generado en el celular: evita duplicar registros al reintentar
+  // la sincronización de cargas hechas sin conexión (RF14).
+  operacionId String?  @map("operacion_id") @db.VarChar(36)
+  createdAt   DateTime @default(now()) @map("created_at")
 
   lote    Lote    @relation(fields: [loteId], references: [id])
   insumo  Insumo  @relation(fields: [insumoId], references: [id])
@@ -141,6 +144,7 @@ model RegistroAlimentacion {
 
   // Un registro por insumo, por lote y por día.
   @@unique([loteId, insumoId, fecha])
+  @@unique([operacionId, insumoId])
   @@index([loteId, fecha])
   @@map("registro_alimentacion")
 }

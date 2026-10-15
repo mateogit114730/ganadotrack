@@ -51,7 +51,7 @@ export default function Login() {
 
       <Box sx={{ display: 'grid', placeItems: 'center', p: { xs: 2.5, md: 6 } }}>
         <Box sx={{ width: '100%', maxWidth: 380 }}>
-          <Box component="img" src="/logo.png" alt="GanadoTrack" sx={{ width: { xs: 170, md: 210 }, display: 'block', mx: 'auto', mt: { xs: -8, md: 0 }, mb: 1, bgcolor: '#fff', borderRadius: '50%', position: 'relative' }} />
+          <Box component="img" src="/logo-420.png" alt="GanadoTrack" sx={{ width: { xs: 170, md: 210 }, display: 'block', mx: 'auto', mt: { xs: -8, md: 0 }, mb: 1, bgcolor: '#fff', borderRadius: '50%', position: 'relative' }} />
           <Typography variant="h5" align="center" gutterBottom>Ingresá a tu campo</Typography>
           <Typography align="center" color="text.secondary" sx={{ mb: 3 }}>Usá el email y la contraseña que te dio el administrador.</Typography>
           <form onSubmit={enviar}>

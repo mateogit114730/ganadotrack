@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import {
-  AppBar, Avatar, Box, Divider, Drawer, IconButton, List, ListItemButton, ListItemIcon, ListItemText,
+  Alert, AppBar, Avatar, Box, Divider, Drawer, IconButton, List, ListItemButton, ListItemIcon, ListItemText,
   Menu, MenuItem, Toolbar, Typography, useMediaQuery,
 } from '@mui/material';
 import { alpha, useTheme } from '@mui/material/styles';
@@ -18,6 +18,9 @@ import PeopleIcon from '@mui/icons-material/PeopleOutline';
 import SettingsIcon from '@mui/icons-material/SettingsOutlined';
 import LogoutIcon from '@mui/icons-material/Logout';
 import PersonIcon from '@mui/icons-material/PersonOutline';
+import InstallMobileIcon from '@mui/icons-material/InstallMobile';
+import CloudOffIcon from '@mui/icons-material/CloudOff';
+import { useEnLinea, useInstalacion } from '../offline/hooks.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import { ETIQUETAS } from '../utils/formato.js';
 import { COLORES } from '../theme.js';
@@ -75,6 +78,8 @@ export default function Layout() {
   const [abierto, setAbierto] = useState(false);
   const [menuUsuario, setMenuUsuario] = useState(null);
   const { pathname } = useLocation();
+  const enLinea = useEnLinea();
+  const { disponible: instalable, instalar } = useInstalacion();
 
   const opciones = MENU.filter((m) => m.roles.includes(usuario.rol));
   // El encargado tiene una sola pantalla: no necesita menú lateral (RNF01).
@@ -163,6 +168,11 @@ export default function Layout() {
             <MenuItem onClick={() => { setMenuUsuario(null); navegar('/perfil'); }}>
               <ListItemIcon><PersonIcon fontSize="small" /></ListItemIcon>Mi perfil
             </MenuItem>
+            {instalable && (
+              <MenuItem onClick={() => { setMenuUsuario(null); instalar(); }}>
+                <ListItemIcon><InstallMobileIcon fontSize="small" /></ListItemIcon>Instalar la app
+              </MenuItem>
+            )}
             <MenuItem onClick={logout}>
               <ListItemIcon><LogoutIcon fontSize="small" /></ListItemIcon>Cerrar sesión
             </MenuItem>
@@ -183,6 +193,11 @@ export default function Layout() {
 
       <Box component="main" sx={{ flex: 1, minWidth: 0, p: { xs: 2, md: 3.5 } }}>
         <Toolbar />
+        {!enLinea && usuario.rol !== 'ENCARGADO' && (
+          <Alert severity="warning" icon={<CloudOffIcon />} sx={{ mb: 2 }}>
+            Sin conexión: se muestran los últimos datos guardados y no se pueden registrar cambios hasta que vuelva la señal.
+          </Alert>
+        )}
         <Outlet />
       </Box>
     </Box>
