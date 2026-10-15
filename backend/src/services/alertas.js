@@ -4,11 +4,16 @@
 //   - STOCK: insumo con stock por debajo del mínimo configurado.
 //   - STOCK_PROYECTADO: al ritmo de consumo previsto, el insumo alcanza para menos días que el mínimo.
 //   - GDP: lote activo cuya última GDP es menor a la GDP objetivo.
+//   - CLIMA: estrés térmico previsto, riesgo alto de garrapata en lotes sin tratamiento reciente
+//     y riesgo de sequía (orientativas; si el servicio de clima no responde, se omiten).
 
 import { prisma } from '../config/prisma.js';
-import { hoy, diasEntre, formatoISO } from '../utils/fechas.js';
+import { hoy, diasEntre, formatoISO, sumarDias } from '../utils/fechas.js';
 import { diasAvisoSanitario } from './parametros.js';
 import { proyeccionInsumos } from './proyeccionStock.js';
+import { obtenerClima } from './clima.js';
+
+const DIAS_SIN_TRATAMIENTO_GARRAPATA = 21;
 
 const ORDEN_SEVERIDAD = { alta: 0, media: 1 };
 
@@ -106,16 +111,81 @@ async function alertasGdp(db) {
     }));
 }
 
+/** Alertas derivadas del clima. El veterinario recibe solo las sanitarias (estrés térmico y garrapata). */
+async function alertasClima(fechaHoy, db, rol) {
+  const clima = await obtenerClima(db);
+  if (!clima.disponible) return [];
+  const { estresTermico, garrapata, sequia } = clima.riesgos;
+  const alertas = [];
+
+  if (estresTermico.nivel === 'peligro' || estresTermico.nivel === 'emergencia') {
+    alertas.push({
+      id: 'CLIMA-ESTRES',
+      tipo: 'CLIMA',
+      severidad: estresTermico.nivel === 'emergencia' ? 'alta' : 'media',
+      titulo: 'Riesgo de estrés térmico',
+      mensaje: `Índice de temperatura y humedad en nivel de ${estresTermico.nivel} para el ${estresTermico.dia}: asegurar sombra y agua fresca, y evitar el manejo en las horas de calor`,
+    });
+  }
+
+  if (garrapata.nivel === 'alto') {
+    const lotes = await db.lote.findMany({
+      where: { estado: 'ACTIVO' },
+      select: {
+        id: true,
+        nombre: true,
+        eventos: {
+          where: { tipo: 'GARRAPATA', estado: 'REALIZADO', fechaRealizada: { gte: sumarDias(fechaHoy, -DIAS_SIN_TRATAMIENTO_GARRAPATA) } },
+          select: { id: true },
+        },
+      },
+    });
+    for (const lote of lotes.filter((l) => l.eventos.length === 0)) {
+      alertas.push({
+        id: `CLIMA-GARRAPATA-${lote.id}`,
+        tipo: 'CLIMA',
+        severidad: 'media',
+        titulo: 'Riesgo alto de garrapata',
+        mensaje: `${lote.nombre}: sin tratamiento en los últimos ${DIAS_SIN_TRATAMIENTO_GARRAPATA} días (temperatura media ${garrapata.temperaturaMedia7} °C, humedad ${garrapata.humedadMedia7} %)`,
+        loteId: lote.id,
+      });
+    }
+  }
+
+  if (rol !== 'VETERINARIO' && sequia.nivel === 'alto') {
+    const [silos, proyeccion] = await Promise.all([db.insumo.findMany({ where: { tipo: 'SILAJE' } }), proyeccionInsumos(db)]);
+    const cobertura = silos
+      .map((s) => proyeccion.get(s.id).diasCobertura)
+      .filter((d) => d !== null)
+      .map((d) => ` El silaje alcanza para ${d} día(s).`)
+      .join('');
+    alertas.push({
+      id: 'CLIMA-SEQUIA',
+      tipo: 'CLIMA',
+      severidad: 'media',
+      titulo: 'Riesgo de sequía',
+      mensaje: `Llovieron ${sequia.lluvia30} mm en 30 días y se pronostican ${sequia.lluviaPronostico7} mm para la semana.${cobertura} Conviene planificar compras de alimento.`,
+    });
+  }
+  return alertas;
+}
+
 /**
  * Devuelve las alertas vigentes visibles para el rol.
- * El veterinario solo ve alertas sanitarias (RF08).
+ * El veterinario solo ve alertas sanitarias y de clima sanitario (RF08).
  */
 export async function generarAlertas(rol, db = prisma) {
   const fechaHoy = hoy();
   const grupos =
     rol === 'VETERINARIO'
-      ? [await alertasSanitarias(fechaHoy, db)]
-      : await Promise.all([alertasSanitarias(fechaHoy, db), alertasStock(db), alertasProyeccion(db), alertasGdp(db)]);
+      ? await Promise.all([alertasSanitarias(fechaHoy, db), alertasClima(fechaHoy, db, rol)])
+      : await Promise.all([
+          alertasSanitarias(fechaHoy, db),
+          alertasStock(db),
+          alertasProyeccion(db),
+          alertasGdp(db),
+          alertasClima(fechaHoy, db, rol),
+        ]);
 
   return grupos.flat().sort((a, b) => ORDEN_SEVERIDAD[a.severidad] - ORDEN_SEVERIDAD[b.severidad]);
 }
