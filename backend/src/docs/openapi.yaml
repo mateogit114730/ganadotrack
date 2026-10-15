@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: GanadoTrack API
-  version: 1.0.1
+  version: 1.1.1
   description: |
     API REST del sistema de gestión de feedlot GanadoTrack.
 
@@ -26,6 +26,10 @@ tags:
   - name: Pesadas
   - name: Sanidad
   - name: Reportes
+  - name: Raciones
+  - name: Protocolos
+  - name: Clima
+  - name: Reportes descargables
   - name: Parámetros
 security:
   - bearerAuth: []
@@ -423,7 +427,11 @@ paths:
               required: [loteId, items]
               properties:
                 loteId: { type: integer, example: 1 }
-                fecha: { type: string, format: date, description: Por defecto, hoy }
+                fecha: { type: string, format: date, description: 'Por defecto, hoy. En cargas hechas sin conexión, la fecha de captura' }
+                operacionId:
+                  type: string
+                  format: uuid
+                  description: Identificador generado en el dispositivo. Si se reenvía la misma operación, la API devuelve lo ya registrado (200, repetido = true) sin duplicar
                 items:
                   type: array
                   items:
@@ -643,6 +651,167 @@ paths:
       responses:
         '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/Alerta' } } } } }
 
+  /raciones:
+    get:
+      tags: [Raciones]
+      summary: Insumos y lotes activos con su ración vigente (VETERINARIO, ADMIN)
+      responses:
+        '200': { description: OK }
+  /lotes/{loteId}/racion:
+    parameters:
+      - { name: loteId, in: path, required: true, schema: { type: integer } }
+    get:
+      tags: [Raciones]
+      summary: Ración vigente del lote (kg por cabeza y kg del día) e historial
+      responses:
+        '200': { description: OK }
+    put:
+      tags: [Raciones]
+      summary: Definir la ración del lote desde una fecha (0 kg quita el insumo)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [items]
+              properties:
+                vigenteDesde: { type: string, format: date, description: Por defecto, hoy }
+                items:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      insumoId: { type: integer }
+                      kgCabezaDia: { type: number, example: 1.5 }
+      responses:
+        '200': { description: Ración guardada }
+        '403': { $ref: '#/components/responses/Error403' }
+  /protocolos:
+    get:
+      tags: [Protocolos]
+      summary: Protocolos sanitarios con sus eventos (VETERINARIO, ADMIN)
+      responses:
+        '200': { description: OK }
+    post:
+      tags: [Protocolos]
+      summary: Crear un protocolo sanitario
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [nombre, items]
+              properties:
+                nombre: { type: string, example: Protocolo feedlot estándar }
+                descripcion: { type: string }
+                porDefecto: { type: boolean }
+                items:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      tipo: { type: string, enum: [VACUNA, ANTIPARASITARIO, GARRAPATA, OTRO] }
+                      nombre: { type: string }
+                      producto: { type: string }
+                      diaDesdeIngreso: { type: integer, example: 21 }
+                      aplicaciones: { type: integer, example: 4 }
+                      repetirCadaDias: { type: integer, example: 21 }
+      responses:
+        '201': { description: Creado }
+        '400': { $ref: '#/components/responses/Error400' }
+  /protocolos/{id}:
+    parameters: [{ $ref: '#/components/parameters/Id' }]
+    put:
+      tags: [Protocolos]
+      summary: Reemplazar un protocolo (no modifica eventos ya generados)
+      responses:
+        '200': { description: OK }
+    delete:
+      tags: [Protocolos]
+      summary: Eliminar un protocolo
+      responses:
+        '200': { description: Eliminado }
+  /lotes/{loteId}/aplicar-protocolo:
+    post:
+      tags: [Protocolos]
+      summary: Generar los eventos de un protocolo en un lote existente
+      parameters:
+        - { name: loteId, in: path, required: true, schema: { type: integer } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [protocoloId]
+              properties:
+                protocoloId: { type: integer }
+                omitirPasadas: { type: boolean, default: true }
+      responses:
+        '201': { description: Eventos creados }
+  /clima:
+    get:
+      tags: [Clima]
+      summary: Clima actual, pronóstico de 7 días y riesgos (estrés térmico, garrapata, sequía)
+      description: Datos de Open-Meteo con caché de 30 minutos. Si el servicio no responde, devuelve disponible = false.
+      responses:
+        '200': { description: OK }
+  /clima/ubicacion:
+    get:
+      tags: [Clima]
+      summary: Ubicación configurada del establecimiento (ADMIN)
+      responses:
+        '200': { description: OK }
+    put:
+      tags: [Clima]
+      summary: Configurar la ubicación (ADMIN)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nombre: { type: string, example: 'Pergamino, Buenos Aires' }
+                latitud: { type: number, example: -33.89 }
+                longitud: { type: number, example: -60.57 }
+      responses:
+        '200': { description: OK }
+  /clima/buscar:
+    get:
+      tags: [Clima]
+      summary: Buscar localidades de Argentina (ADMIN)
+      parameters:
+        - { name: q, in: query, required: true, schema: { type: string, minLength: 3 } }
+      responses:
+        '200': { description: Localidades encontradas }
+        '503': { description: El servicio de localidades no responde }
+  /reportes/lotes/{id}/informe.pdf:
+    get:
+      tags: [Reportes descargables]
+      summary: Informe del lote en PDF (de cierre si el lote está cerrado)
+      parameters: [{ $ref: '#/components/parameters/Id' }]
+      responses:
+        '200': { description: PDF, content: { application/pdf: { schema: { type: string, format: binary } } } }
+  /reportes/mensual.pdf:
+    get:
+      tags: [Reportes descargables]
+      summary: Reporte mensual en PDF
+      parameters:
+        - { name: mes, in: query, schema: { type: string, example: '2026-10' }, description: 'AAAA-MM (por defecto, el mes actual)' }
+      responses:
+        '200': { description: PDF, content: { application/pdf: { schema: { type: string, format: binary } } } }
+  /reportes/planilla.xlsx:
+    get:
+      tags: [Reportes descargables]
+      summary: Planilla Excel para el contador (lotes, alimentación, compras, sanidad, pesadas, bajas)
+      parameters:
+        - { name: desde, in: query, schema: { type: string, format: date } }
+        - { name: hasta, in: query, schema: { type: string, format: date } }
+      responses:
+        '200': { description: Excel }
   /parametros:
     get:
       tags: [Parámetros]
