@@ -3,6 +3,7 @@ import { AppError, conflicto, noEncontrado } from '../../utils/errores.js';
 import { hoy, diasEntre } from '../../utils/fechas.js';
 import { calcularGdp } from '../../services/calculos.js';
 import { loteConIndicadores } from '../../services/indicadores.js';
+import { conversionDeLote } from '../../services/conversion.js';
 import { obtenerLote } from '../lotes/lotes.service.js';
 
 /**
@@ -54,7 +55,12 @@ export async function eliminarUltima(id) {
   return { eliminado: true };
 }
 
+/** Pesadas del lote con la conversión alimenticia de cada período. */
 export async function listar({ loteId }) {
-  await obtenerLote(loteId);
-  return prisma.pesada.findMany({ where: { loteId }, orderBy: { fecha: 'asc' } });
+  const lote = await obtenerLote(loteId);
+  const [pesadas, conversion] = await Promise.all([
+    prisma.pesada.findMany({ where: { loteId }, orderBy: { fecha: 'asc' } }),
+    conversionDeLote(lote),
+  ]);
+  return pesadas.map((p) => ({ ...p, ...conversion.porPesada.get(p.id) }));
 }

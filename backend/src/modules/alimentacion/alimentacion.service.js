@@ -3,17 +3,18 @@ import { AppError, conflicto, noEncontrado } from '../../utils/errores.js';
 import { hoy } from '../../utils/fechas.js';
 import { costoAlimentacion, redondear } from '../../services/calculos.js';
 import { obtenerLote } from '../lotes/lotes.service.js';
+import { cabezasPorLote, racionesVigentes, conKgDelDia } from '../racion/racion.service.js';
 
 /**
- * Datos para el formulario del encargado: lotes activos, insumos y qué insumos
- * ya se cargaron hoy en cada lote.
+ * Datos para el formulario del encargado: lotes activos con sus cabezas, la ración
+ * sugerida para hoy (kg por cabeza × cabezas), los insumos y lo ya cargado hoy.
  */
 export async function opciones() {
   const fechaHoy = hoy();
   const [lotes, insumos, registrosHoy] = await Promise.all([
     prisma.lote.findMany({
       where: { estado: 'ACTIVO' },
-      select: { id: true, nombre: true },
+      select: { id: true, nombre: true, cantidadInicial: true },
       orderBy: { nombre: 'asc' },
     }),
     prisma.insumo.findMany({
@@ -26,11 +27,18 @@ export async function opciones() {
     }),
   ]);
 
+  const [cabezas, raciones] = await Promise.all([
+    cabezasPorLote(lotes),
+    racionesVigentes(lotes.map((l) => l.id), fechaHoy),
+  ]);
+
   return {
     fecha: fechaHoy,
     insumos,
-    lotes: lotes.map((l) => ({
+    lotes: lotes.map(({ cantidadInicial: _cantidad, ...l }) => ({
       ...l,
+      cabezasActuales: cabezas.get(l.id),
+      racionSugerida: conKgDelDia(raciones.get(l.id), cabezas.get(l.id)),
       cargadoHoy: registrosHoy.filter((r) => r.loteId === l.id),
     })),
   };

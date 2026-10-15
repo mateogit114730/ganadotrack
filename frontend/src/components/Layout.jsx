@@ -9,6 +9,7 @@ import MenuIcon from '@mui/icons-material/Menu';
 import DashboardIcon from '@mui/icons-material/SpaceDashboardOutlined';
 import PetsIcon from '@mui/icons-material/Pets';
 import GrassIcon from '@mui/icons-material/Grass';
+import RestaurantIcon from '@mui/icons-material/RestaurantMenu';
 import InventoryIcon from '@mui/icons-material/Inventory2Outlined';
 import VaccinesIcon from '@mui/icons-material/VaccinesOutlined';
 import PeopleIcon from '@mui/icons-material/PeopleOutline';
@@ -27,6 +28,7 @@ export const MENU = [
   { a: '/dashboard', texto: 'Inicio', icono: <DashboardIcon />, roles: ['ADMIN'] },
   { a: '/lotes', texto: 'Lotes', icono: <PetsIcon />, roles: ['ADMIN'] },
   { a: '/alimentacion', texto: 'Alimentación', icono: <GrassIcon />, roles: ['ADMIN', 'ENCARGADO'] },
+  { a: '/raciones', texto: 'Raciones', icono: <RestaurantIcon />, roles: ['ADMIN', 'VETERINARIO'] },
   { a: '/insumos', texto: 'Insumos y stock', icono: <InventoryIcon />, roles: ['ADMIN'] },
   { a: '/sanidad', texto: 'Sanidad', icono: <VaccinesIcon />, roles: ['ADMIN', 'VETERINARIO'] },
   { a: '/usuarios', texto: 'Usuarios', icono: <PeopleIcon />, roles: ['ADMIN'] },

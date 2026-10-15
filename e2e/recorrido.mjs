@@ -60,18 +60,23 @@ const paso = (t) => console.log('✓', t);
   await login(page, 'encargado@ganadotrack.local');
   if (!page.url().endsWith('/alimentacion')) errores.push(`encargado redirigido a ${page.url()}`);
   await foto(page, '10-encargado-inicio');
-  // Clic 1: lote · (escribir kg) · Clic 2: Confirmar
-  await page.getByText('Lote 01 - Angus novillos').click();
-  await page.getByLabel('Suplemento proteico 18%').fill('180');
-  await page.getByLabel('Silaje de sorgo (propio)').fill('1800');
-  await foto(page, '11-encargado-formulario');
+  // Carga en 1 toque: la ración del día ya viene calculada (RF09)
+  const tarjeta1 = page.locator('.MuiCard-root', { hasText: 'Lote 01 - Angus novillos' });
   const t1 = Date.now();
-  await page.getByRole('button', { name: /Confirmar/ }).click();
+  await tarjeta1.getByRole('button', { name: 'Confirmar ración de hoy' }).click();
   await page.getByText(/Registro guardado/).waitFor();
-  paso(`encargado registró alimentación (confirmación en ${Date.now() - t1} ms)`);
+  paso(`encargado confirmó la ración en 1 toque (respuesta en ${Date.now() - t1} ms)`);
   await foto(page, '12-encargado-confirmacion');
-  // Segundo intento: el lote figura como cargado
-  if (!(await page.getByText('Cargado hoy').first().isVisible())) errores.push('no se marca "Cargado hoy"');
+  if (!(await tarjeta1.getByText('Cargado hoy').isVisible())) errores.push('no se marca "Cargado hoy"');
+
+  // Otros kilos: formulario precargado con la ración, se modifica un valor
+  const tarjeta2 = page.locator('.MuiCard-root', { hasText: 'Lote 02 - Angus vaquillonas' });
+  await tarjeta2.getByRole('button', { name: 'Di otros kilos' }).click();
+  await tarjeta2.getByLabel('Silaje de sorgo (propio)').fill('1100');
+  await foto(page, '11-encargado-formulario');
+  await tarjeta2.getByRole('button', { name: 'Confirmar' }).click();
+  await page.getByText(/Registro guardado – Lote 02/).waitFor();
+  paso('encargado cargó otros kilos desde el formulario precargado');
   // Acceso a pantallas de admin debe redirigir
   await page.goto(`${BASE}/dashboard`);
   await page.waitForLoadState('networkidle');

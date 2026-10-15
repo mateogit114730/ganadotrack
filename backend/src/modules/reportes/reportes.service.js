@@ -3,12 +3,14 @@ import { conIndicadores, loteConIndicadores } from '../../services/indicadores.j
 import { generarAlertas } from '../../services/alertas.js';
 import { redondear } from '../../services/calculos.js';
 import { obtenerLote } from '../lotes/lotes.service.js';
+import { conversionDeLote } from '../../services/conversion.js';
 
 /** Costos y rentabilidad de un lote con el desglose por insumo y por tipo de evento (CU11). */
 export async function costosLote(loteId) {
-  const lote = await loteConIndicadores(await obtenerLote(loteId));
+  const loteBase = await obtenerLote(loteId);
+  const lote = await loteConIndicadores(loteBase);
 
-  const [porInsumo, porTipoSanitario, insumos] = await Promise.all([
+  const [porInsumo, porTipoSanitario, insumos, conversion] = await Promise.all([
     prisma.registroAlimentacion.groupBy({
       by: ['insumoId'],
       where: { loteId },
@@ -21,12 +23,14 @@ export async function costosLote(loteId) {
       _count: { _all: true },
     }),
     prisma.insumo.findMany({ select: { id: true, nombre: true } }),
+    conversionDeLote(loteBase),
   ]);
 
   const nombreInsumo = new Map(insumos.map((i) => [i.id, i.nombre]));
 
   return {
     lote,
+    conversion: { acumulada: conversion.acumulada, kgMsTotal: conversion.kgMsTotal },
     alimentacionPorInsumo: porInsumo.map((g) => ({
       insumoId: g.insumoId,
       insumo: nombreInsumo.get(g.insumoId),

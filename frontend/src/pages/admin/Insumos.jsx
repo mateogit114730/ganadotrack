@@ -54,7 +54,11 @@ function DialogoCompra({ insumo, compra, onCerrar, onGuardado }) {
 }
 
 function DialogoConfigurar({ insumo, onCerrar, onGuardado }) {
-  const [datos, setDatos] = useState({ stockMinimoKg: insumo.stockMinimoKg, precioKg: insumo.precioKg });
+  const [datos, setDatos] = useState({
+    stockMinimoKg: insumo.stockMinimoKg,
+    precioKg: insumo.precioKg,
+    materiaSecaPct: insumo.materiaSecaPct,
+  });
   const campo = (n) => ({ value: datos[n], onChange: (e) => setDatos({ ...datos, [n]: e.target.value }) });
   const guardar = async () => {
     await api.patch(`/insumos/${insumo.id}`, datos);
@@ -64,6 +68,7 @@ function DialogoConfigurar({ insumo, onCerrar, onGuardado }) {
     <DialogoFormulario abierto titulo={`Configurar – ${insumo.nombre}`} onCerrar={onCerrar} onEnviar={guardar}>
       <TextField label="Stock mínimo (genera alerta)" type="number" {...campo('stockMinimoKg')} slotProps={unidad('kg')} />
       <TextField label="Precio por kg" type="number" {...campo('precioKg')} slotProps={unidad('$/kg')} helperText="Se usa para calcular el costo de cada día de alimentación" />
+      <TextField label="Materia seca" type="number" {...campo('materiaSecaPct')} slotProps={unidad('%')} helperText="Silaje ≈ 35 %, suplemento ≈ 90 %. Se usa para la conversión alimenticia" />
     </DialogoFormulario>
   );
 }

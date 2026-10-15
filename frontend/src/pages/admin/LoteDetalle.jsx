@@ -176,6 +176,7 @@ function TabPesadas({ lote, pesadas, activo, onEliminar }) {
                 <TableCell>Fecha</TableCell>
                 <TableCell align="right">Peso promedio</TableCell>
                 <TableCell align="right">GDP</TableCell>
+                <TableCell align="right" title="Kg de materia seca por kg ganado en el período">Conversión</TableCell>
                 {activo && <TableCell />}
               </TableRow>
             </TableHead>
@@ -184,6 +185,7 @@ function TabPesadas({ lote, pesadas, activo, onEliminar }) {
                 <TableCell>{fmtFecha(lote.fechaIngreso)} (ingreso)</TableCell>
                 <TableCell align="right">{fmtKg(lote.pesoIngreso, 1)}</TableCell>
                 <TableCell align="right">—</TableCell>
+                <TableCell align="right">—</TableCell>
                 {activo && <TableCell />}
               </TableRow>
               {pesadas.map((p, i) => (
@@ -191,6 +193,7 @@ function TabPesadas({ lote, pesadas, activo, onEliminar }) {
                   <TableCell>{fmtFecha(p.fecha)}</TableCell>
                   <TableCell align="right">{fmtKg(p.pesoPromedio, 1)}</TableCell>
                   <TableCell align="right" sx={{ color: p.gdp < lote.gdpObjetivo ? 'warning.dark' : undefined }}>{fmtGdp(p.gdp)}</TableCell>
+                  <TableCell align="right">{p.conversion ? `${fmtNumero(p.conversion, 1)} : 1` : '—'}</TableCell>
                   {activo && (
                     <TableCell padding="checkbox">
                       {i === pesadas.length - 1 && (
@@ -328,7 +331,7 @@ function TabSanidad({ eventos, bajas, activo, onEliminarBaja }) {
   );
 }
 
-function TabCostos({ lote, alimentacionPorInsumo, sanidadPorTipo }) {
+function TabCostos({ lote, alimentacionPorInsumo, sanidadPorTipo, conversion }) {
   const ind = lote.indicadores;
   return (
     <Box sx={{ display: 'grid', gap: 2, gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' } }}>
@@ -357,6 +360,10 @@ function TabCostos({ lote, alimentacionPorInsumo, sanidadPorTipo }) {
           <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1 }}>Rentabilidad estimada</Typography>
           <Stack spacing={1}>
             <Dato etiqueta="Kg de carne al gancho" valor={`${fmtNumero(ind.pesoActual, 1)} kg × ${ind.cabezasActuales} cab. × ${fmtNumero(ind.rendimientoGancho * 100)} % = ${fmtKg(ind.kgCarneEstimados)}`} />
+            <Dato
+              etiqueta="Conversión alimenticia acumulada (kg de materia seca por kg ganado)"
+              valor={conversion.acumulada ? `${fmtNumero(conversion.acumulada, 2)} : 1 · ${fmtKg(conversion.kgMsTotal)} de MS consumidos` : 'Requiere al menos una pesada'}
+            />
             <Dato etiqueta="Costo de engorde por kg de carne" valor={fmtMonedaDecimales(ind.costoPorKgCarne)} />
             <Dato etiqueta="Precio de venta por kg" valor={ind.precioVentaKg ? fmtMoneda(ind.precioVentaKg) : 'No cargado (use “Editar”)'} />
             <Dato etiqueta="Margen bruto estimado de engorde" valor={fmtMoneda(ind.margenBruto)} />
@@ -497,7 +504,7 @@ export default function LoteDetalle() {
       {pestana === 'pesadas' && <TabPesadas lote={lote} pesadas={datos.pesadas} activo={activo} onEliminar={eliminarPesada} />}
       {pestana === 'alimentacion' && <TabAlimentacion registros={datos.alimentacion} activo={activo} onEliminar={eliminarRegistro} />}
       {pestana === 'sanidad' && <TabSanidad eventos={datos.eventos} bajas={datos.bajas} activo={activo} onEliminarBaja={eliminarBaja} />}
-      {pestana === 'costos' && <TabCostos lote={lote} alimentacionPorInsumo={datos.alimentacionPorInsumo} sanidadPorTipo={datos.sanidadPorTipo} />}
+      {pestana === 'costos' && <TabCostos lote={lote} alimentacionPorInsumo={datos.alimentacionPorInsumo} sanidadPorTipo={datos.sanidadPorTipo} conversion={datos.conversion} />}
 
       {activo && (
         <>
