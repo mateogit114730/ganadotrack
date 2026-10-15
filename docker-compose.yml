@@ -1,0 +1,24 @@
+# Base de datos PostgreSQL para desarrollo local.
+# Se crean dos bases: ganadotrack (desarrollo) y ganadotrack_test (pruebas de integración).
+services:
+  db:
+    image: postgres:17-alpine
+    container_name: ganadotrack-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ganadotrack
+      POSTGRES_PASSWORD: ganadotrack
+      POSTGRES_DB: ganadotrack
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./backend/prisma/init-test-db.sql:/docker-entrypoint-initdb.d/init-test-db.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ganadotrack"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  pgdata:
