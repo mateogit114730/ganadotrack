@@ -10,6 +10,7 @@ import '@fontsource/nunito-sans/600.css';
 import '@fontsource/nunito-sans/700.css';
 import { theme } from './theme.js';
 import { AuthProvider } from './context/AuthContext.jsx';
+import { InteraccionProvider } from './components/Interaccion.jsx';
 import App from './App.jsx';
 
 createRoot(document.getElementById('root')).render(
@@ -18,7 +19,9 @@ createRoot(document.getElementById('root')).render(
       <CssBaseline />
       <BrowserRouter>
         <AuthProvider>
-          <App />
+          <InteraccionProvider>
+            <App />
+          </InteraccionProvider>
         </AuthProvider>
       </BrowserRouter>
     </ThemeProvider>

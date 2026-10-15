@@ -6,6 +6,7 @@ import swaggerUi from 'swagger-ui-express';
 import { readFileSync } from 'node:fs';
 import { parse } from 'yaml';
 import { env } from './config/env.js';
+import { prisma } from './config/prisma.js';
 import { manejarErrores, rutaNoEncontrada } from './middlewares/manejarErrores.js';
 import { authRouter } from './modules/auth/auth.routes.js';
 import { usuariosRouter } from './modules/usuarios/usuarios.routes.js';
@@ -19,13 +20,23 @@ import { parametrosRouter } from './modules/parametros/parametros.routes.js';
 
 export function crearApp() {
   const app = express();
+  // En producción la API corre detrás del proxy de la plataforma: la IP real llega en X-Forwarded-For.
+  app.set('trust proxy', 1);
 
   app.use(helmet());
   app.use(cors({ origin: env.corsOrigin, exposedHeaders: ['X-Token-Renovado'] }));
   app.use(express.json({ limit: '100kb' }));
-  if (env.nodeEnv !== 'test') app.use(morgan('dev'));
+  if (env.nodeEnv !== 'test') app.use(morgan(env.nodeEnv === 'production' ? 'combined' : 'dev'));
 
-  app.get('/api/health', (req, res) => res.json({ estado: 'ok', version: process.env.npm_package_version }));
+  // Estado de la API y de la conexión a la base (lo usa la plataforma de despliegue).
+  app.get('/api/health', async (req, res) => {
+    try {
+      await prisma.$queryRaw`SELECT 1`;
+      res.json({ estado: 'ok', baseDeDatos: 'ok' });
+    } catch {
+      res.status(503).json({ estado: 'error', baseDeDatos: 'sin conexión' });
+    }
+  });
 
   // Documentación interactiva de la API (Swagger UI).
   const openapi = parse(readFileSync(new URL('./docs/openapi.yaml', import.meta.url), 'utf8'));

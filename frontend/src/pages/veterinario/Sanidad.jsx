@@ -12,6 +12,7 @@ import { useCarga } from '../../utils/useCarga.js';
 import { Cargando, ErrorCarga, Encabezado, Grilla, ChipEstado, EstadoVacio } from '../../components/Comunes.jsx';
 import DialogoFormulario from '../../components/DialogoFormulario.jsx';
 import ListaAlertas from '../../components/ListaAlertas.jsx';
+import { useConfirmar } from '../../components/Interaccion.jsx';
 import { ETIQUETAS, fmtFecha, fmtMoneda, hoyISO } from '../../utils/formato.js';
 
 const TIPOS = Object.entries(ETIQUETAS.tipoEvento);
@@ -53,6 +54,32 @@ function useFormulario(inicial) {
   const [datos, setDatos] = useState(inicial);
   const campo = (n) => ({ value: datos[n], onChange: (e) => setDatos({ ...datos, [n]: e.target.value }) });
   return [datos, campo];
+}
+
+/** Reprogramar o corregir un evento pendiente. */
+function DialogoEditarEvento({ evento, onCerrar, onGuardado }) {
+  const [datos, campo] = useFormulario({
+    tipo: evento.tipo,
+    nombre: evento.nombre,
+    producto: evento.producto ?? '',
+    fechaProgramada: evento.fechaProgramada.slice(0, 10),
+  });
+  const guardar = async () => {
+    const { data } = await api.patch(`/sanidad/eventos/${evento.id}`, datos);
+    onGuardado({ severidad: 'success', titulo: 'Evento actualizado', texto: [`${data.nombre} – ${data.lote.nombre} el ${fmtFecha(data.fechaProgramada)}`] });
+  };
+  return (
+    <DialogoFormulario abierto titulo={`Editar evento – ${evento.lote.nombre}`} onCerrar={onCerrar} onEnviar={guardar}>
+      <Grilla min={180}>
+        <TextField select label="Tipo" {...campo('tipo')}>
+          {TIPOS.map(([v, t]) => <MenuItem key={v} value={v}>{t}</MenuItem>)}
+        </TextField>
+        <TextField label="Fecha programada" type="date" {...campo('fechaProgramada')} slotProps={{ inputLabel: { shrink: true } }} />
+      </Grilla>
+      <TextField label="Nombre del evento" {...campo('nombre')} />
+      <TextField label="Producto previsto" {...campo('producto')} />
+    </DialogoFormulario>
+  );
 }
 
 /** CU08 – Programar evento sanitario. */
@@ -174,6 +201,7 @@ export default function Sanidad() {
   const { datos, cargando, error, recargar } = useCarga(() => cargarSanidad(loteId), [loteId]);
   const [dialogo, setDialogo] = useState(null);
   const [aviso, setAviso] = useState(null);
+  const confirmar = useConfirmar();
 
   if (cargando && !datos) return <Cargando />;
   if (error) return <ErrorCarga mensaje={error} />;
@@ -186,6 +214,13 @@ export default function Sanidad() {
     recargar();
   };
   const eliminar = async (evento) => {
+    const ok = await confirmar({
+      titulo: '¿Eliminar el evento pendiente?',
+      texto: `${evento.nombre} – ${evento.lote.nombre} (${fmtFecha(evento.fechaProgramada)}).`,
+      textoConfirmar: 'Eliminar',
+      peligro: true,
+    });
+    if (!ok) return;
     try {
       await api.delete(`/sanidad/eventos/${evento.id}`);
       listo({ severidad: 'success', titulo: 'Evento eliminado', texto: [evento.nombre] });
@@ -248,6 +283,7 @@ export default function Sanidad() {
             </CardContent>
             <CardActions sx={{ px: 2, pb: 2 }}>
               <Button variant="contained" size="small" onClick={() => setDialogo({ tipo: 'realizar', evento: e })}>Registrar realizado</Button>
+              <Button size="small" onClick={() => setDialogo({ tipo: 'editar', evento: e })}>Editar</Button>
               <Button size="small" color="inherit" onClick={() => eliminar(e)}>Eliminar</Button>
             </CardActions>
           </Card>
@@ -318,6 +354,7 @@ export default function Sanidad() {
       {dialogo?.tipo === 'noProgramado' && <DialogoNoProgramado {...propsDialogo} />}
       {dialogo?.tipo === 'baja' && <DialogoBaja {...propsDialogo} />}
       {dialogo?.tipo === 'realizar' && <DialogoRealizar evento={dialogo.evento} onCerrar={() => setDialogo(null)} onGuardado={listo} />}
+      {dialogo?.tipo === 'editar' && <DialogoEditarEvento evento={dialogo.evento} onCerrar={() => setDialogo(null)} onGuardado={listo} />}
     </>
   );
 }

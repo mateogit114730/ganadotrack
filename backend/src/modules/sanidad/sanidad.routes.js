@@ -5,6 +5,7 @@ import { idParam } from '../../utils/validaciones.js';
 import {
   programarEventoSchema,
   realizarEventoSchema,
+  editarEventoSchema,
   eventoNoProgramadoSchema,
   listarEventosQuery,
   registrarBajaSchema,
@@ -26,7 +27,10 @@ sanidadRouter.post(
   validar({ params: idParam, body: realizarEventoSchema }),
   controlador.realizar,
 );
+sanidadRouter.patch('/eventos/:id', validar({ params: idParam, body: editarEventoSchema }), controlador.editarPendiente);
 sanidadRouter.delete('/eventos/:id', validar({ params: idParam }), controlador.eliminarPendiente);
 
 sanidadRouter.get('/bajas', validar({ query: listarBajasQuery }), controlador.listarBajas);
 sanidadRouter.post('/bajas', validar({ body: registrarBajaSchema }), controlador.registrarBaja);
+// Corregir una baja cambia las cabezas y los costos por kg: solo el administrador.
+sanidadRouter.delete('/bajas/:id', permitir('ADMIN'), validar({ params: idParam }), controlador.eliminarBaja);
