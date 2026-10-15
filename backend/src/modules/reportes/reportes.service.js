@@ -44,12 +44,18 @@ export async function costosLote(loteId) {
 /** Datos del dashboard principal (CU12, RF07). */
 export async function dashboard() {
   const [lotesActivos, alertas, insumos] = await Promise.all([
-    prisma.lote.findMany({ where: { estado: 'ACTIVO' }, orderBy: { fechaIngreso: 'asc' } }),
+    prisma.lote.findMany({
+      where: { estado: 'ACTIVO' },
+      orderBy: { fechaIngreso: 'asc' },
+      include: { pesadas: { select: { pesoPromedio: true }, orderBy: { fecha: 'asc' } } },
+    }),
     generarAlertas('ADMIN'),
     prisma.insumo.findMany({ orderBy: { nombre: 'asc' } }),
   ]);
-  const lotes = (await conIndicadores(lotesActivos)).map((l) => ({
+  const lotes = (await conIndicadores(lotesActivos)).map(({ pesadas, ...l }) => ({
     ...l,
+    // Evolución del peso promedio (ingreso + pesadas) para el mini gráfico del dashboard.
+    seriePeso: [Number(l.pesoIngreso), ...pesadas.map((p) => Number(p.pesoPromedio))],
     alertas: alertas.filter((a) => a.loteId === l.id).length,
   }));
 

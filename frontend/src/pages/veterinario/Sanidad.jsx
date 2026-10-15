@@ -1,14 +1,15 @@
 import { useState } from 'react';
 import {
-  Alert, AlertTitle, Box, Button, Card, CardActions, CardContent, Chip, InputAdornment, MenuItem,
+  Alert, AlertTitle, Box, Button, Card, CardActions, CardContent, InputAdornment, MenuItem,
   Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField, Typography,
 } from '@mui/material';
 import EventIcon from '@mui/icons-material/EventAvailable';
+import VaccinesIcon from '@mui/icons-material/VaccinesOutlined';
 import AddTaskIcon from '@mui/icons-material/AddTask';
 import RemoveCircleIcon from '@mui/icons-material/RemoveCircleOutline';
 import { api, mensajeError } from '../../api/cliente.js';
 import { useCarga } from '../../utils/useCarga.js';
-import { Cargando, ErrorCarga, Encabezado, Grilla } from '../../components/Comunes.jsx';
+import { Cargando, ErrorCarga, Encabezado, Grilla, ChipEstado, EstadoVacio } from '../../components/Comunes.jsx';
 import DialogoFormulario from '../../components/DialogoFormulario.jsx';
 import ListaAlertas from '../../components/ListaAlertas.jsx';
 import { ETIQUETAS, fmtFecha, fmtMoneda, hoyISO } from '../../utils/formato.js';
@@ -197,6 +198,7 @@ export default function Sanidad() {
   return (
     <>
       <Encabezado
+        icono={<VaccinesIcon />}
         titulo="Sanidad"
         subtitulo="Calendario sanitario, tratamientos y bajas (RF05)"
         acciones={
@@ -232,13 +234,13 @@ export default function Sanidad() {
       <ListaAlertas alertas={datos.alertas} />
 
       <Typography variant="h6" sx={{ mt: 3 }} gutterBottom>Eventos pendientes ({pendientes.length})</Typography>
-      {pendientes.length === 0 && <Typography color="text.secondary">No hay eventos pendientes.</Typography>}
+      {pendientes.length === 0 && <EstadoVacio titulo="Sin eventos pendientes" texto="Programá el próximo evento del calendario sanitario." />}
       <Grilla min={260}>
         {pendientes.map((e) => (
           <Card key={e.id}>
             <CardContent>
               <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', mb: 0.5 }}>
-                <Chip size="small" label={ETIQUETAS.tipoEvento[e.tipo]} color={e.tipo === 'GARRAPATA' ? 'secondary' : 'default'} />
+                <ChipEstado estado={e.tipo === 'GARRAPATA' ? 'aviso' : 'neutro'} label={ETIQUETAS.tipoEvento[e.tipo]} />
                 <Typography variant="body2" color="text.secondary">{fmtFecha(e.fechaProgramada)}</Typography>
               </Box>
               <Typography sx={{ fontWeight: 600 }}>{e.nombre}</Typography>
