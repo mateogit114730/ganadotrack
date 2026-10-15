@@ -196,6 +196,23 @@ const paso = (t) => console.log('✓', t);
   await page.waitForLoadState('networkidle');
   await foto(page, '38-admin-insumos');
 
+  // Reportes: descarga real de PDF y Excel desde el navegador (RF13)
+  await page.goto(`${BASE}/reportes`);
+  await page.getByText('Planilla para el contador', { exact: true }).waitFor();
+  await foto(page, '38b-admin-reportes');
+  const [excel] = await Promise.all([
+    page.waitForEvent('download'),
+    page.getByRole('button', { name: 'Descargar Excel' }).click(),
+  ]);
+  const [pdf] = await Promise.all([
+    page.waitForEvent('download'),
+    page.getByRole('button', { name: 'Descargar PDF' }).first().click(),
+  ]);
+  if (!excel.suggestedFilename().endsWith('.xlsx') || !pdf.suggestedFilename().endsWith('.pdf')) {
+    errores.push(`descargas inesperadas: ${excel.suggestedFilename()} / ${pdf.suggestedFilename()}`);
+  }
+  paso(`reportes descargados: ${pdf.suggestedFilename()} y ${excel.suggestedFilename()}`);
+
   await page.goto(`${BASE}/usuarios`);
   await page.getByText('encargado@ganadotrack.local').waitFor();
   await foto(page, '39-admin-usuarios');

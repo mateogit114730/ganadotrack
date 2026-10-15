@@ -11,6 +11,7 @@ import PetsIcon from '@mui/icons-material/Pets';
 import GrassIcon from '@mui/icons-material/Grass';
 import RestaurantIcon from '@mui/icons-material/RestaurantMenu';
 import ChecklistIcon from '@mui/icons-material/ChecklistRtl';
+import SummarizeIcon from '@mui/icons-material/SummarizeOutlined';
 import InventoryIcon from '@mui/icons-material/Inventory2Outlined';
 import VaccinesIcon from '@mui/icons-material/VaccinesOutlined';
 import PeopleIcon from '@mui/icons-material/PeopleOutline';
@@ -34,6 +35,7 @@ export const MENU = [
   { a: '/sanidad', texto: 'Sanidad', icono: <VaccinesIcon />, roles: ['ADMIN', 'VETERINARIO'] },
   { a: '/protocolos', texto: 'Protocolos', icono: <ChecklistIcon />, roles: ['ADMIN', 'VETERINARIO'] },
   { a: '/raciones', texto: 'Raciones', icono: <RestaurantIcon />, roles: ['ADMIN', 'VETERINARIO'] },
+  { a: '/reportes', texto: 'Reportes', icono: <SummarizeIcon />, roles: ['ADMIN'] },
   { a: '/usuarios', texto: 'Usuarios', icono: <PeopleIcon />, roles: ['ADMIN'] },
   { a: '/configuracion', texto: 'Configuración', icono: <SettingsIcon />, roles: ['ADMIN'] },
 ];

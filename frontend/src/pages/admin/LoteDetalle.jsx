@@ -11,6 +11,8 @@ import EditIcon from '@mui/icons-material/Edit';
 import LockIcon from '@mui/icons-material/Lock';
 import DeleteIcon from '@mui/icons-material/DeleteOutline';
 import ChecklistIcon from '@mui/icons-material/ChecklistRtl';
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdfOutlined';
+import { descargar } from '../../utils/descargar.js';
 import {
   CartesianGrid, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis,
 } from 'recharts';
@@ -480,6 +482,13 @@ export default function LoteDetalle() {
           </Typography>
         </Box>
         <ChipEstado estado={activo ? 'ok' : 'neutro'} label={activo ? 'Activo' : 'Cerrado'} sx={{ height: 30, fontSize: 14 }} />
+        <Button
+          variant="outlined"
+          startIcon={<PictureAsPdfIcon />}
+          onClick={() => descargar(`/reportes/lotes/${lote.id}/informe.pdf`, { nombre: 'informe-lote.pdf' }).catch((err) => avisar(mensajeError(err), 'error'))}
+        >
+          {activo ? 'Informe PDF' : 'Informe de cierre'}
+        </Button>
         {activo && (
           <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }}>
             <Button variant="contained" startIcon={<MonitorWeightIcon />} onClick={() => setDialogo('pesada')}>Registrar pesada</Button>
