@@ -16,3 +16,8 @@ export const compraSchema = z.object({
   cantidadKg: positivo('La cantidad'),
   precioTotal: positivo('El precio total'),
 });
+
+export const compraParams = z.object({
+  id: z.coerce.number().int().positive(),
+  compraId: z.coerce.number().int().positive(),
+});

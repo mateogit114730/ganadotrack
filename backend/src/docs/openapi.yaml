@@ -188,6 +188,32 @@ paths:
         '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/Usuario' } } } }
         '401': { $ref: '#/components/responses/Error401' }
 
+  /auth/perfil:
+    patch:
+      tags: [Autenticación]
+      summary: Cambiar el nombre propio (todos los roles)
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, required: [nombre], properties: { nombre: { type: string } } } } }
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/Usuario' } } } }
+  /auth/password:
+    patch:
+      tags: [Autenticación]
+      summary: Cambiar la contraseña propia (exige la actual)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [actual, nueva]
+              properties:
+                actual: { type: string, format: password }
+                nueva: { type: string, format: password, minLength: 8 }
+      responses:
+        '200': { description: Contraseña actualizada }
+        '400': { $ref: '#/components/responses/Error400' }
   /usuarios:
     get:
       tags: [Usuarios]
@@ -345,6 +371,27 @@ paths:
         '201': { description: Compra registrada }
         '400': { $ref: '#/components/responses/Error400' }
 
+  /insumos/{id}/compras/{compraId}:
+    put:
+      tags: [Insumos]
+      summary: Corregir una compra (ADMIN). El stock se ajusta por la diferencia
+      parameters:
+        - { $ref: '#/components/parameters/Id' }
+        - { name: compraId, in: path, required: true, schema: { type: integer } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [fecha, cantidadKg, precioTotal]
+              properties:
+                fecha: { type: string, format: date }
+                cantidadKg: { type: number }
+                precioTotal: { type: number }
+      responses:
+        '200': { description: Compra corregida }
+        '409': { description: No se puede reducir lo que ya se consumió }
   /alimentacion/opciones:
     get:
       tags: [Alimentación]
@@ -431,6 +478,14 @@ paths:
         '201': { description: Pesada registrada, con indicadores y avisos }
         '400': { $ref: '#/components/responses/Error400' }
 
+  /pesadas/{id}:
+    delete:
+      tags: [Pesadas]
+      summary: Eliminar la última pesada del lote (ADMIN)
+      parameters: [{ $ref: '#/components/parameters/Id' }]
+      responses:
+        '200': { description: Eliminada }
+        '409': { description: No es la última pesada del lote }
   /sanidad/lotes:
     get:
       tags: [Sanidad]
@@ -508,6 +563,23 @@ paths:
         '200': { description: Evento realizado }
         '409': { $ref: '#/components/responses/Error409' }
   /sanidad/eventos/{id}:
+    patch:
+      tags: [Sanidad]
+      summary: Reprogramar o corregir un evento pendiente
+      parameters: [{ $ref: '#/components/parameters/Id' }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                tipo: { type: string, enum: [VACUNA, ANTIPARASITARIO, GARRAPATA, OTRO] }
+                nombre: { type: string }
+                producto: { type: string }
+                fechaProgramada: { type: string, format: date }
+      responses:
+        '200': { description: Evento actualizado }
+        '409': { $ref: '#/components/responses/Error409' }
     delete:
       tags: [Sanidad]
       summary: Eliminar un evento pendiente
@@ -543,6 +615,14 @@ paths:
         '201': { description: Baja registrada }
         '400': { $ref: '#/components/responses/Error400' }
 
+  /sanidad/bajas/{id}:
+    delete:
+      tags: [Sanidad]
+      summary: Eliminar una baja cargada por error (solo ADMIN)
+      parameters: [{ $ref: '#/components/parameters/Id' }]
+      responses:
+        '200': { description: Eliminada }
+        '403': { $ref: '#/components/responses/Error403' }
   /dashboard:
     get:
       tags: [Reportes]

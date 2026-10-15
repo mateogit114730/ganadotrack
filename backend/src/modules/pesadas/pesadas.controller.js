@@ -7,3 +7,7 @@ export async function registrar(req, res) {
 export async function listar(req, res) {
   res.json(await servicio.listar(req.datosQuery));
 }
+
+export async function eliminarUltima(req, res) {
+  res.json(await servicio.eliminarUltima(req.datosParams.id));
+}

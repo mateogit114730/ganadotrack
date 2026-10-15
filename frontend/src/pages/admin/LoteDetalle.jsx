@@ -16,6 +16,7 @@ import { api, mensajeError } from '../../api/cliente.js';
 import { useCarga } from '../../utils/useCarga.js';
 import { Cargando, ErrorCarga, Grilla, Indicador, Dato, ChipEstado } from '../../components/Comunes.jsx';
 import DialogoFormulario from '../../components/DialogoFormulario.jsx';
+import { useConfirmar, useAviso } from '../../components/Interaccion.jsx';
 import {
   ETIQUETAS, fmtFecha, fmtGdp, fmtKg, fmtMoneda, fmtMonedaDecimales, fmtNumero, hoyISO,
 } from '../../utils/formato.js';
@@ -141,7 +142,7 @@ function DialogoCierre({ lote, abierto, onCerrar, onCerrado }) {
 
 /* ---------------------------- Pestañas ---------------------------- */
 
-function TabPesadas({ lote, pesadas }) {
+function TabPesadas({ lote, pesadas, activo, onEliminar }) {
   // Eje X en tiempo real: la distancia entre puntos refleja los días transcurridos.
   const datosGrafico = [
     { ts: Date.parse(lote.fechaIngreso), peso: lote.pesoIngreso },
@@ -175,6 +176,7 @@ function TabPesadas({ lote, pesadas }) {
                 <TableCell>Fecha</TableCell>
                 <TableCell align="right">Peso promedio</TableCell>
                 <TableCell align="right">GDP</TableCell>
+                {activo && <TableCell />}
               </TableRow>
             </TableHead>
             <TableBody>
@@ -182,12 +184,22 @@ function TabPesadas({ lote, pesadas }) {
                 <TableCell>{fmtFecha(lote.fechaIngreso)} (ingreso)</TableCell>
                 <TableCell align="right">{fmtKg(lote.pesoIngreso, 1)}</TableCell>
                 <TableCell align="right">—</TableCell>
+                {activo && <TableCell />}
               </TableRow>
-              {pesadas.map((p) => (
+              {pesadas.map((p, i) => (
                 <TableRow key={p.id}>
                   <TableCell>{fmtFecha(p.fecha)}</TableCell>
                   <TableCell align="right">{fmtKg(p.pesoPromedio, 1)}</TableCell>
                   <TableCell align="right" sx={{ color: p.gdp < lote.gdpObjetivo ? 'warning.dark' : undefined }}>{fmtGdp(p.gdp)}</TableCell>
+                  {activo && (
+                    <TableCell padding="checkbox">
+                      {i === pesadas.length - 1 && (
+                        <IconButton size="small" title="Eliminar la última pesada" onClick={() => onEliminar(p)}>
+                          <DeleteIcon fontSize="small" />
+                        </IconButton>
+                      )}
+                    </TableCell>
+                  )}
                 </TableRow>
               ))}
             </TableBody>
@@ -240,7 +252,7 @@ function TabAlimentacion({ registros, activo, onEliminar }) {
   );
 }
 
-function TabSanidad({ eventos, bajas }) {
+function TabSanidad({ eventos, bajas, activo, onEliminarBaja }) {
   return (
     <Stack spacing={2}>
       <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
@@ -288,16 +300,24 @@ function TabSanidad({ eventos, bajas }) {
                 <TableCell align="right">Cantidad</TableCell>
                 <TableCell>Causa</TableCell>
                 <TableCell>Observaciones</TableCell>
+                {activo && <TableCell />}
               </TableRow>
             </TableHead>
             <TableBody>
-              {bajas.length === 0 && <TableRow><TableCell colSpan={4} align="center">Sin bajas registradas.</TableCell></TableRow>}
+              {bajas.length === 0 && <TableRow><TableCell colSpan={5} align="center">Sin bajas registradas.</TableCell></TableRow>}
               {bajas.map((b) => (
                 <TableRow key={b.id}>
                   <TableCell>{fmtFecha(b.fecha)}</TableCell>
                   <TableCell align="right">{b.cantidad}</TableCell>
                   <TableCell>{ETIQUETAS.causaBaja[b.causa]}</TableCell>
                   <TableCell>{b.observaciones ?? '—'}</TableCell>
+                  {activo && (
+                    <TableCell padding="checkbox">
+                      <IconButton size="small" title="Eliminar baja (devuelve las cabezas)" onClick={() => onEliminarBaja(b)}>
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
+                    </TableCell>
+                  )}
                 </TableRow>
               ))}
             </TableBody>
@@ -359,6 +379,8 @@ export default function LoteDetalle() {
   const [pestana, setPestana] = useState('pesadas');
   const [dialogo, setDialogo] = useState(null);
   const [aviso, setAviso] = useState(null);
+  const confirmar = useConfirmar();
+  const avisar = useAviso();
 
   if (cargando && !datos) return <Cargando />;
   if (error) return <ErrorCarga mensaje={error} />;
@@ -382,15 +404,35 @@ export default function LoteDetalle() {
     recargar();
   };
 
-  const eliminarRegistro = async (registro) => {
+  /** Pide confirmación, elimina en la API y avisa el resultado. */
+  const eliminar = async ({ url, titulo, texto, exito }) => {
+    if (!(await confirmar({ titulo, texto, textoConfirmar: 'Eliminar', peligro: true }))) return;
     try {
-      await api.delete(`/alimentacion/${registro.id}`);
-      setAviso({ severidad: 'success', titulo: 'Registro eliminado', texto: [`Se devolvieron ${fmtKg(registro.kg)} al stock de ${registro.insumo.nombre}`] });
+      await api.delete(url);
+      avisar(exito);
       recargar();
     } catch (err) {
-      setAviso({ severidad: 'error', titulo: 'No se pudo eliminar', texto: [mensajeError(err)] });
+      avisar(mensajeError(err), 'error');
     }
   };
+  const eliminarRegistro = (r) => eliminar({
+    url: `/alimentacion/${r.id}`,
+    titulo: '¿Eliminar el registro de alimentación?',
+    texto: `${r.insumo.nombre}, ${fmtKg(r.kg)} del ${fmtFecha(r.fecha)}. Los kilos vuelven al stock.`,
+    exito: `Se devolvieron ${fmtKg(r.kg)} al stock de ${r.insumo.nombre}`,
+  });
+  const eliminarPesada = (p) => eliminar({
+    url: `/pesadas/${p.id}`,
+    titulo: '¿Eliminar la última pesada?',
+    texto: `Pesada del ${fmtFecha(p.fecha)} (${fmtKg(p.pesoPromedio, 1)}). La proyección se recalcula con la pesada anterior.`,
+    exito: 'Pesada eliminada',
+  });
+  const eliminarBaja = (b) => eliminar({
+    url: `/sanidad/bajas/${b.id}`,
+    titulo: '¿Eliminar la baja?',
+    texto: `${b.cantidad} animal(es) del ${fmtFecha(b.fecha)}. Las cabezas vuelven a sumarse al lote.`,
+    exito: 'Baja eliminada',
+  });
 
   return (
     <>
@@ -452,9 +494,9 @@ export default function LoteDetalle() {
         <Tab value="costos" label="Costos" />
       </Tabs>
 
-      {pestana === 'pesadas' && <TabPesadas lote={lote} pesadas={datos.pesadas} />}
+      {pestana === 'pesadas' && <TabPesadas lote={lote} pesadas={datos.pesadas} activo={activo} onEliminar={eliminarPesada} />}
       {pestana === 'alimentacion' && <TabAlimentacion registros={datos.alimentacion} activo={activo} onEliminar={eliminarRegistro} />}
-      {pestana === 'sanidad' && <TabSanidad eventos={datos.eventos} bajas={datos.bajas} />}
+      {pestana === 'sanidad' && <TabSanidad eventos={datos.eventos} bajas={datos.bajas} activo={activo} onEliminarBaja={eliminarBaja} />}
       {pestana === 'costos' && <TabCostos lote={lote} alimentacionPorInsumo={datos.alimentacionPorInsumo} sanidadPorTipo={datos.sanidadPorTipo} />}
 
       {activo && (

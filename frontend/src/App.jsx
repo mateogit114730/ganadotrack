@@ -5,6 +5,8 @@ import RutaProtegida from './components/RutaProtegida.jsx';
 import Layout from './components/Layout.jsx';
 import Login from './pages/Login.jsx';
 import { Cargando } from './components/Comunes.jsx';
+import ErrorBoundary from './components/ErrorBoundary.jsx';
+import NoEncontrada from './pages/NoEncontrada.jsx';
 
 // Cada pantalla se descarga recién cuando se usa: el encargado, desde el celular,
 // no descarga las pantallas del administrador (RNF03).
@@ -16,6 +18,7 @@ const Usuarios = lazy(() => import('./pages/admin/Usuarios.jsx'));
 const Configuracion = lazy(() => import('./pages/admin/Configuracion.jsx'));
 const CargarAlimentacion = lazy(() => import('./pages/encargado/CargarAlimentacion.jsx'));
 const Sanidad = lazy(() => import('./pages/veterinario/Sanidad.jsx'));
+const Perfil = lazy(() => import('./pages/Perfil.jsx'));
 
 function Inicio() {
   const { usuario } = useAuth();
@@ -24,29 +27,33 @@ function Inicio() {
 
 export default function App() {
   return (
-    <Suspense fallback={<Cargando />}>
-      <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route element={<RutaProtegida />}>
-          <Route element={<Layout />}>
-            <Route element={<RutaProtegida roles={['ADMIN']} />}>
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/lotes" element={<Lotes />} />
-              <Route path="/lotes/:id" element={<LoteDetalle />} />
-              <Route path="/insumos" element={<Insumos />} />
-              <Route path="/usuarios" element={<Usuarios />} />
-              <Route path="/configuracion" element={<Configuracion />} />
-            </Route>
-            <Route element={<RutaProtegida roles={['ADMIN', 'ENCARGADO']} />}>
-              <Route path="/alimentacion" element={<CargarAlimentacion />} />
-            </Route>
-            <Route element={<RutaProtegida roles={['ADMIN', 'VETERINARIO']} />}>
-              <Route path="/sanidad" element={<Sanidad />} />
+    <ErrorBoundary>
+      <Suspense fallback={<Cargando />}>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route element={<RutaProtegida />}>
+            <Route element={<Layout />}>
+              <Route path="/perfil" element={<Perfil />} />
+              <Route element={<RutaProtegida roles={['ADMIN']} />}>
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/lotes" element={<Lotes />} />
+                <Route path="/lotes/:id" element={<LoteDetalle />} />
+                <Route path="/insumos" element={<Insumos />} />
+                <Route path="/usuarios" element={<Usuarios />} />
+                <Route path="/configuracion" element={<Configuracion />} />
+              </Route>
+              <Route element={<RutaProtegida roles={['ADMIN', 'ENCARGADO']} />}>
+                <Route path="/alimentacion" element={<CargarAlimentacion />} />
+              </Route>
+              <Route element={<RutaProtegida roles={['ADMIN', 'VETERINARIO']} />}>
+                <Route path="/sanidad" element={<Sanidad />} />
+              </Route>
             </Route>
           </Route>
-        </Route>
-        <Route path="*" element={<Inicio />} />
-      </Routes>
-    </Suspense>
+          <Route path="/" element={<Inicio />} />
+          <Route path="*" element={<NoEncontrada />} />
+        </Routes>
+      </Suspense>
+    </ErrorBoundary>
   );
 }

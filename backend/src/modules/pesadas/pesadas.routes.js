@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { autenticar, permitir } from '../../middlewares/auth.js';
 import { validar } from '../../middlewares/validar.js';
+import { idParam } from '../../utils/validaciones.js';
 import { registrarPesadaSchema, listarPesadasQuery } from './pesadas.schema.js';
 import * as controlador from './pesadas.controller.js';
 
@@ -10,3 +11,4 @@ pesadasRouter.use(autenticar, permitir('ADMIN'));
 
 pesadasRouter.get('/', validar({ query: listarPesadasQuery }), controlador.listar);
 pesadasRouter.post('/', validar({ body: registrarPesadaSchema }), controlador.registrar);
+pesadasRouter.delete('/:id', validar({ params: idParam }), controlador.eliminarUltima);

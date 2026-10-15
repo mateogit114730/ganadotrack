@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import {
-  Alert, Box, Button, Card, CardActions, CardContent, InputAdornment, Tab, Table, TableBody,
+  Alert, Box, Button, Card, CardActions, CardContent, IconButton, InputAdornment, Tab, Table, TableBody,
   TableCell, TableContainer, TableHead, TableRow, Tabs, TextField, Typography,
 } from '@mui/material';
 import InventoryIcon from '@mui/icons-material/Inventory2Outlined';
+import EditIcon from '@mui/icons-material/EditOutlined';
 import { api } from '../../api/cliente.js';
 import { useCarga } from '../../utils/useCarga.js';
 import { Cargando, ErrorCarga, Encabezado, Grilla, Dato, ChipEstado } from '../../components/Comunes.jsx';
@@ -13,19 +14,27 @@ import { fmtFecha, fmtKg, fmtMoneda, fmtMonedaDecimales, fmtToneladas, hoyISO } 
 const unidad = (u) => ({ input: { endAdornment: <InputAdornment position="end">{u}</InputAdornment> } });
 const fmtStock = (insumo, kg) => (insumo.tipo === 'SILAJE' ? `${fmtToneladas(kg)} (${fmtKg(kg)})` : fmtKg(kg));
 
-/** CU06 – Registrar compra o carga de insumo. El silaje propio se carga con su costo estimado. */
-function DialogoCompra({ insumo, onCerrar, onGuardado }) {
-  const [datos, setDatos] = useState({ fecha: hoyISO(), cantidadKg: '', precioTotal: '' });
+/**
+ * CU06 – Registrar compra o carga de insumo (el silaje propio se carga con su costo estimado).
+ * Si recibe "compra", corrige una compra existente y el stock se ajusta por la diferencia.
+ */
+function DialogoCompra({ insumo, compra, onCerrar, onGuardado }) {
+  const [datos, setDatos] = useState(
+    compra
+      ? { fecha: compra.fecha.slice(0, 10), cantidadKg: compra.cantidadKg, precioTotal: compra.precioTotal }
+      : { fecha: hoyISO(), cantidadKg: '', precioTotal: '' },
+  );
   const campo = (n) => ({ value: datos[n], onChange: (e) => setDatos({ ...datos, [n]: e.target.value }) });
   const precioKg = Number(datos.precioTotal) / Number(datos.cantidadKg);
   const guardar = async () => {
-    await api.post(`/insumos/${insumo.id}/compras`, datos);
+    if (compra) await api.put(`/insumos/${insumo.id}/compras/${compra.id}`, datos);
+    else await api.post(`/insumos/${insumo.id}/compras`, datos);
     onGuardado();
   };
   return (
     <DialogoFormulario
       abierto
-      titulo={insumo.tipo === 'SILAJE' ? `Cargar silaje – ${insumo.nombre}` : `Registrar compra – ${insumo.nombre}`}
+      titulo={compra ? `Corregir compra – ${insumo.nombre}` : insumo.tipo === 'SILAJE' ? `Cargar silaje – ${insumo.nombre}` : `Registrar compra – ${insumo.nombre}`}
       onCerrar={onCerrar}
       onEnviar={guardar}
     >
@@ -59,10 +68,10 @@ function DialogoConfigurar({ insumo, onCerrar, onGuardado }) {
   );
 }
 
-function HistorialCompras({ insumo }) {
+function HistorialCompras({ insumo, onEditar }) {
   const { datos, cargando, error } = useCarga(
     () => api.get(`/insumos/${insumo.id}/compras`).then((r) => r.data),
-    [insumo.id, insumo.stockKg],
+    [insumo.id, insumo.stockKg, insumo.precioKg],
   );
   if (cargando) return <Cargando />;
   if (error) return <ErrorCarga mensaje={error} />;
@@ -77,10 +86,11 @@ function HistorialCompras({ insumo }) {
               <TableCell align="right">Precio total</TableCell>
               <TableCell align="right">$/kg</TableCell>
               <TableCell>Registró</TableCell>
+              <TableCell />
             </TableRow>
           </TableHead>
           <TableBody>
-            {datos.length === 0 && <TableRow><TableCell colSpan={5} align="center">Sin compras registradas.</TableCell></TableRow>}
+            {datos.length === 0 && <TableRow><TableCell colSpan={6} align="center">Sin compras registradas.</TableCell></TableRow>}
             {datos.map((c) => (
               <TableRow key={c.id}>
                 <TableCell>{fmtFecha(c.fecha)}</TableCell>
@@ -88,6 +98,9 @@ function HistorialCompras({ insumo }) {
                 <TableCell align="right">{fmtMoneda(c.precioTotal)}</TableCell>
                 <TableCell align="right">{fmtMonedaDecimales(c.precioTotal / c.cantidadKg)}</TableCell>
                 <TableCell>{c.usuario.nombre}</TableCell>
+                <TableCell padding="checkbox">
+                  <IconButton size="small" title="Corregir compra" onClick={() => onEditar(c)}><EditIcon fontSize="small" /></IconButton>
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -143,9 +156,11 @@ export default function Insumos() {
       <Tabs value={historial} onChange={(_, v) => setHistorial(v)} sx={{ mb: 2 }}>
         {datos.map((i, n) => <Tab key={i.id} value={n} label={i.nombre} />)}
       </Tabs>
-      {datos[historial] && <HistorialCompras insumo={datos[historial]} />}
+      {datos[historial] && (
+        <HistorialCompras insumo={datos[historial]} onEditar={(c) => setDialogo({ tipo: 'compra', insumo: datos[historial], compra: c })} />
+      )}
 
-      {dialogo?.tipo === 'compra' && <DialogoCompra insumo={dialogo.insumo} onCerrar={() => setDialogo(null)} onGuardado={listo} />}
+      {dialogo?.tipo === 'compra' && <DialogoCompra insumo={dialogo.insumo} compra={dialogo.compra} onCerrar={() => setDialogo(null)} onGuardado={listo} />}
       {dialogo?.tipo === 'config' && <DialogoConfigurar insumo={dialogo.insumo} onCerrar={() => setDialogo(null)} onGuardado={listo} />}
     </>
   );

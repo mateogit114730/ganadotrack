@@ -31,3 +31,11 @@ export async function registrarBaja(req, res) {
 export async function listarBajas(req, res) {
   res.json(await servicio.listarBajas(req.datosQuery));
 }
+
+export async function editarPendiente(req, res) {
+  res.json(await servicio.editarPendiente(req.datosParams.id, req.body));
+}
+
+export async function eliminarBaja(req, res) {
+  res.json(await servicio.eliminarBaja(req.datosParams.id));
+}

@@ -17,7 +17,12 @@ const browser = await chromium.launch({ channel: 'msedge', headless: true });
 async function nuevaPagina(viewport) {
   const ctx = await browser.newContext({ viewport, locale: 'es-AR' });
   const page = await ctx.newPage();
-  page.on('console', (m) => m.type() === 'error' && errores.push(`[console] ${page.url()} ${m.text()}`));
+  // El 401 del intento de login con contraseña incorrecta es esperado: no se cuenta como error.
+  page.on('console', (m) => {
+    if (m.type() !== 'error') return;
+    if (page.url().endsWith('/login') && m.text().includes('401')) return;
+    errores.push(`[console] ${page.url()} ${m.text()}`);
+  });
   page.on('pageerror', (e) => errores.push(`[pageerror] ${page.url()} ${e.message}`));
   page.on('response', (r) => r.status() >= 500 && errores.push(`[http ${r.status()}] ${r.url()}`));
   return { ctx, page };
@@ -110,7 +115,7 @@ const paso = (t) => console.log('✓', t);
   await login(page, 'admin@ganadotrack.local');
   const t0 = Date.now();
   await page.goto(`${BASE}/dashboard`);
-  await page.getByText('Lotes activos').first().waitFor();
+  await page.getByText('Lotes en el corral').first().waitFor();
   await page.waitForLoadState('networkidle');
   paso(`dashboard cargado en ${Date.now() - t0} ms`);
   await foto(page, '30-admin-dashboard');
@@ -151,6 +156,15 @@ const paso = (t) => console.log('✓', t);
   paso('admin registró una pesada');
   await foto(page, '36-admin-pesada-registrada');
 
+  // Corrección: eliminar la última pesada (con confirmación)
+  await page.getByRole('tab', { name: 'Pesadas' }).click();
+  await page.getByTitle('Eliminar la última pesada').click();
+  await page.getByText('¿Eliminar la última pesada?').waitFor();
+  await foto(page, '36b-admin-confirmar-eliminar');
+  await page.getByRole('button', { name: 'Eliminar' }).last().click();
+  await page.getByText('Pesada eliminada').waitFor();
+  paso('admin eliminó la última pesada con confirmación');
+
   // Cierre (solo simulación + confirmación) del Lote 02
   await page.goto(`${BASE}/lotes`);
   await page.getByRole('cell', { name: 'Lote 02 - Angus vaquillonas' }).click();
@@ -175,6 +189,14 @@ const paso = (t) => console.log('✓', t);
   await page.goto(`${BASE}/configuracion`);
   await page.getByText(/Rendimiento al gancho/).first().waitFor();
   await foto(page, '40-admin-configuracion');
+
+  await page.goto(`${BASE}/perfil`);
+  await page.getByText('Cambiar contraseña').first().waitFor();
+  await foto(page, '43-perfil');
+  await page.goto(`${BASE}/no-existe`);
+  await page.getByText('Esta tranquera está cerrada').waitFor();
+  await foto(page, '44-pagina-404');
+  paso('perfil y página 404');
   await ctx.close();
 }
 
@@ -182,7 +204,7 @@ const paso = (t) => console.log('✓', t);
 {
   const { ctx, page } = await nuevaPagina({ width: 390, height: 844 });
   await login(page, 'admin@ganadotrack.local');
-  await page.getByText('Lotes activos').first().waitFor();
+  await page.getByText('Lotes en el corral').first().waitFor();
   await page.waitForLoadState('networkidle');
   const anchoDoc = await page.evaluate(() => document.documentElement.scrollWidth);
   if (anchoDoc > 390) errores.push(`dashboard móvil con scroll horizontal: ${anchoDoc}px`);
