@@ -1,0 +1,12 @@
+{
+  "name": "ganadotrack-e2e",
+  "private": true,
+  "type": "module",
+  "description": "Recorrido end-to-end en el navegador (Microsoft Edge) con los tres roles",
+  "scripts": {
+    "recorrido": "node recorrido.mjs ../docs/capturas"
+  },
+  "devDependencies": {
+    "playwright-core": "^1.64.0"
+  }
+}
