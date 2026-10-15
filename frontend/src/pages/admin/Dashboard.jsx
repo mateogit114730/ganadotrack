@@ -19,9 +19,9 @@ import { COLORES } from '../../theme.js';
 import { fmtFecha, fmtGdp, fmtKg, fmtMoneda, fmtNumero, fmtToneladas } from '../../utils/formato.js';
 
 const GRUPOS_ALERTA = [
-  { tipo: 'SANITARIA', titulo: 'Sanidad', icono: <VaccinesIcon fontSize="small" /> },
-  { tipo: 'STOCK', titulo: 'Stock', icono: <InventoryIcon fontSize="small" /> },
-  { tipo: 'GDP', titulo: 'Ganancia de peso', icono: <TrendingDownIcon fontSize="small" /> },
+  { tipos: ['SANITARIA'], titulo: 'Sanidad', icono: <VaccinesIcon fontSize="small" /> },
+  { tipos: ['STOCK', 'STOCK_PROYECTADO'], titulo: 'Stock', icono: <InventoryIcon fontSize="small" /> },
+  { tipos: ['GDP'], titulo: 'Ganancia de peso', icono: <TrendingDownIcon fontSize="small" /> },
 ];
 
 function TarjetaLote({ lote, onAbrir }) {
@@ -91,7 +91,10 @@ function StockInsumo({ insumo }) {
           color={insumo.bajoMinimo ? 'warning' : 'secondary'}
           sx={{ height: 8, my: 0.5 }}
         />
-        <Typography variant="caption" color="text.secondary">Mínimo {fmt(insumo.stockMinimoKg)}</Typography>
+        <Typography variant="caption" color="text.secondary">
+          Mínimo {fmt(insumo.stockMinimoKg)}
+          {insumo.diasCobertura !== null && ` · alcanza para ${insumo.diasCobertura} día(s), hasta el ${fmtFecha(insumo.fechaQuiebre)}`}
+        </Typography>
       </CardContent>
     </Card>
   );
@@ -161,10 +164,10 @@ export default function Dashboard() {
           {alertas.length === 0 && <ListaAlertas alertas={[]} />}
           <Stack spacing={2}>
             {GRUPOS_ALERTA.map((g) => {
-              const delGrupo = alertas.filter((a) => a.tipo === g.tipo);
+              const delGrupo = alertas.filter((a) => g.tipos.includes(a.tipo));
               if (!delGrupo.length) return null;
               return (
-                <Box key={g.tipo}>
+                <Box key={g.titulo}>
                   <Typography variant="subtitle2" sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mb: 1, color: COLORES.tierra }}>
                     {g.icono} {g.titulo}
                   </Typography>

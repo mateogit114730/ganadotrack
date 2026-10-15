@@ -98,3 +98,29 @@ export function conversionAlimenticia(kgMsConsumidos, aumentoPesoPromedio, cabez
   if (!(kgGanados > 0)) return null;
   return redondear(kgMsConsumidos / kgGanados, 2);
 }
+
+/**
+ * Días que alcanza el stock de un insumo al ritmo de consumo diario (redondeado hacia abajo:
+ * si alcanza para 6,8 días, el día 7 ya falta). Devuelve null si no hay consumo previsto.
+ */
+export function diasDeCobertura(stockKg, consumoDiarioKg) {
+  if (!(consumoDiarioKg > 0)) return null;
+  return Math.floor(stockKg / consumoDiarioKg);
+}
+
+/**
+ * Compra sugerida para cubrir el consumo de los próximos "horizonteDias" y terminar con el
+ * stock mínimo: consumo × horizonte + mínimo − stock actual, redondeada a múltiplos de 100 kg.
+ */
+export function compraSugerida(stockKg, consumoDiarioKg, horizonteDias, stockMinimoKg = 0) {
+  const faltante = consumoDiarioKg * horizonteDias + stockMinimoKg - stockKg;
+  return faltante > 0 ? Math.ceil(faltante / 100) * 100 : 0;
+}
+
+/** Stock proyectado día por día (nunca negativo), para graficar la curva de consumo. */
+export function stockProyectado(stockKg, consumoDiarioKg, dias) {
+  return Array.from({ length: dias + 1 }, (_, d) => ({
+    dia: d,
+    kg: Math.max(0, redondear(stockKg - consumoDiarioKg * d, 0)),
+  }));
+}

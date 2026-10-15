@@ -2,15 +2,20 @@ import { prisma } from '../../config/prisma.js';
 import { AppError, noEncontrado } from '../../utils/errores.js';
 import { hoy } from '../../utils/fechas.js';
 import { redondear } from '../../services/calculos.js';
+import { proyeccionInsumos } from '../../services/proyeccionStock.js';
 
 const conEstado = (insumo) => ({
   ...insumo,
   bajoMinimo: Number(insumo.stockKg) < Number(insumo.stockMinimoKg),
 });
 
+/** Insumos con su estado de stock y la proyección de consumo (RF11). */
 export async function listar() {
-  const insumos = await prisma.insumo.findMany({ orderBy: { nombre: 'asc' } });
-  return insumos.map(conEstado);
+  const [insumos, proyeccion] = await Promise.all([
+    prisma.insumo.findMany({ orderBy: { nombre: 'asc' } }),
+    proyeccionInsumos(),
+  ]);
+  return insumos.map((i) => ({ ...conEstado(i), proyeccion: proyeccion.get(i.id) }));
 }
 
 export async function actualizar(id, datos) {

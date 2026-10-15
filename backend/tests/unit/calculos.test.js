@@ -11,6 +11,9 @@ import {
   kgSugeridos,
   kgMateriaSeca,
   conversionAlimenticia,
+  diasDeCobertura,
+  compraSugerida,
+  stockProyectado,
 } from '../../src/services/calculos.js';
 import { aFecha, formatoISO } from '../../src/utils/fechas.js';
 
@@ -115,5 +118,31 @@ describe('ración y conversión alimenticia (RF09)', () => {
   it('no calcula la conversión si el lote no ganó peso', () => {
     expect(conversionAlimenticia(1000, 0, 100)).toBeNull();
     expect(conversionAlimenticia(1000, -2, 100)).toBeNull();
+  });
+});
+
+describe('proyección de stock (RF11)', () => {
+  it('calcula los días que alcanza el stock, redondeando hacia abajo', () => {
+    expect(diasDeCobertura(1500, 445)).toBe(3);
+    expect(diasDeCobertura(180000, 4440)).toBe(40);
+  });
+
+  it('no proyecta si no hay consumo previsto', () => {
+    expect(diasDeCobertura(1500, 0)).toBeNull();
+  });
+
+  it('sugiere la compra para el horizonte más el stock mínimo, en múltiplos de 100 kg', () => {
+    // 445 × 14 + 2.000 − 1.500 = 6.730 → 6.800
+    expect(compraSugerida(1500, 445, 14, 2000)).toBe(6800);
+  });
+
+  it('no sugiere compra si el stock alcanza', () => {
+    expect(compraSugerida(180000, 4440, 14, 40000)).toBe(0);
+  });
+
+  it('proyecta el stock día por día sin valores negativos', () => {
+    expect(stockProyectado(1000, 400, 3)).toEqual([
+      { dia: 0, kg: 1000 }, { dia: 1, kg: 600 }, { dia: 2, kg: 200 }, { dia: 3, kg: 0 },
+    ]);
   });
 });

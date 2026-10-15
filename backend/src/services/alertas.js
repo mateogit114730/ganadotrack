@@ -2,11 +2,13 @@
 // consulta a partir de los datos actuales, por lo que siempre reflejan el estado real.
 //   - SANITARIA: evento pendiente que vence en ≤ N días (parámetro, por defecto 7) o ya vencido.
 //   - STOCK: insumo con stock por debajo del mínimo configurado.
+//   - STOCK_PROYECTADO: al ritmo de consumo previsto, el insumo alcanza para menos días que el mínimo.
 //   - GDP: lote activo cuya última GDP es menor a la GDP objetivo.
 
 import { prisma } from '../config/prisma.js';
 import { hoy, diasEntre, formatoISO } from '../utils/fechas.js';
 import { diasAvisoSanitario } from './parametros.js';
+import { proyeccionInsumos } from './proyeccionStock.js';
 
 const ORDEN_SEVERIDAD = { alta: 0, media: 1 };
 
@@ -68,6 +70,24 @@ async function alertasStock(db) {
     }));
 }
 
+async function alertasProyeccion(db) {
+  const [insumos, proyeccion] = await Promise.all([db.insumo.findMany({ orderBy: { nombre: 'asc' } }), proyeccionInsumos(db)]);
+  return insumos
+    // Si ya está bajo el mínimo, la alerta de STOCK lo informa: no se duplica.
+    .filter((i) => proyeccion.get(i.id).coberturaBaja && Number(i.stockKg) >= Number(i.stockMinimoKg))
+    .map((i) => {
+      const p = proyeccion.get(i.id);
+      return {
+        id: `STOCK_PROYECTADO-${i.id}`,
+        tipo: 'STOCK_PROYECTADO',
+        severidad: p.diasCobertura <= 3 ? 'alta' : 'media',
+        titulo: 'El stock no alcanza',
+        mensaje: `${i.nombre}: alcanza para ${p.diasCobertura} día(s) (hasta el ${formatoISO(p.fechaQuiebre)}). Compra sugerida: ${p.compraSugeridaKg.toLocaleString('es-AR')} kg`,
+        insumoId: i.id,
+      };
+    });
+}
+
 async function alertasGdp(db) {
   const lotes = await db.lote.findMany({
     where: { estado: 'ACTIVO' },
@@ -95,7 +115,7 @@ export async function generarAlertas(rol, db = prisma) {
   const grupos =
     rol === 'VETERINARIO'
       ? [await alertasSanitarias(fechaHoy, db)]
-      : await Promise.all([alertasSanitarias(fechaHoy, db), alertasStock(db), alertasGdp(db)]);
+      : await Promise.all([alertasSanitarias(fechaHoy, db), alertasStock(db), alertasProyeccion(db), alertasGdp(db)]);
 
   return grupos.flat().sort((a, b) => ORDEN_SEVERIDAD[a.severidad] - ORDEN_SEVERIDAD[b.severidad]);
 }
