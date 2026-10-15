@@ -3,7 +3,7 @@ import { AppError, conflicto, noEncontrado } from '../../utils/errores.js';
 import { hoy } from '../../utils/fechas.js';
 import { costoAlimentacion, redondear } from '../../services/calculos.js';
 import { obtenerLote } from '../lotes/lotes.service.js';
-import { cabezasPorLote, racionesVigentes, conKgDelDia } from '../racion/racion.service.js';
+import { cabezasPorLote, racionesVigentes, conKgDelDia } from '../../services/raciones.js';
 
 /**
  * Datos para el formulario del encargado: lotes activos con sus cabezas, la ración

@@ -9,6 +9,8 @@ import { PARAMETROS } from '../../services/parametros.js';
 const REGLAS = {
   rendimiento_gancho: z.coerce.number().gt(0).lte(1, { error: 'El rendimiento debe estar entre 0 y 1' }),
   dias_aviso_sanitario: z.coerce.number().int().min(1).max(60, { error: 'Entre 1 y 60 días' }),
+  dias_cobertura_minima: z.coerce.number().int().min(1).max(90, { error: 'Entre 1 y 90 días' }),
+  horizonte_compra_dias: z.coerce.number().int().min(1).max(120, { error: 'Entre 1 y 120 días' }),
 };
 
 const claveParam = z.object({ clave: z.enum(Object.keys(PARAMETROS), { error: 'Parámetro inexistente' }) });

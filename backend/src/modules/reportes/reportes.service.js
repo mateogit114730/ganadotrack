@@ -4,6 +4,7 @@ import { generarAlertas } from '../../services/alertas.js';
 import { redondear } from '../../services/calculos.js';
 import { obtenerLote } from '../lotes/lotes.service.js';
 import { conversionDeLote } from '../../services/conversion.js';
+import { proyeccionInsumos } from '../../services/proyeccionStock.js';
 
 /** Costos y rentabilidad de un lote con el desglose por insumo y por tipo de evento (CU11). */
 export async function costosLote(loteId) {
@@ -47,7 +48,7 @@ export async function costosLote(loteId) {
 
 /** Datos del dashboard principal (CU12, RF07). */
 export async function dashboard() {
-  const [lotesActivos, alertas, insumos] = await Promise.all([
+  const [lotesActivos, alertas, insumos, proyeccion] = await Promise.all([
     prisma.lote.findMany({
       where: { estado: 'ACTIVO' },
       orderBy: { fechaIngreso: 'asc' },
@@ -55,6 +56,7 @@ export async function dashboard() {
     }),
     generarAlertas('ADMIN'),
     prisma.insumo.findMany({ orderBy: { nombre: 'asc' } }),
+    proyeccionInsumos(),
   ]);
   const lotes = (await conIndicadores(lotesActivos)).map(({ pesadas, ...l }) => ({
     ...l,
@@ -85,6 +87,9 @@ export async function dashboard() {
       stockKg: Number(i.stockKg),
       stockMinimoKg: Number(i.stockMinimoKg),
       bajoMinimo: Number(i.stockKg) < Number(i.stockMinimoKg),
+      diasCobertura: proyeccion.get(i.id).diasCobertura,
+      fechaQuiebre: proyeccion.get(i.id).fechaQuiebre,
+      coberturaBaja: proyeccion.get(i.id).coberturaBaja,
     })),
   };
 }

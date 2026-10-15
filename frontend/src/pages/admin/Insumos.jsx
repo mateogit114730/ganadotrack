@@ -5,6 +5,9 @@ import {
 } from '@mui/material';
 import InventoryIcon from '@mui/icons-material/Inventory2Outlined';
 import EditIcon from '@mui/icons-material/EditOutlined';
+import ShoppingCartIcon from '@mui/icons-material/ShoppingCartOutlined';
+import { Area, AreaChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { COLORES } from '../../theme.js';
 import { api } from '../../api/cliente.js';
 import { useCarga } from '../../utils/useCarga.js';
 import { Cargando, ErrorCarga, Encabezado, Grilla, Dato, ChipEstado } from '../../components/Comunes.jsx';
@@ -18,11 +21,11 @@ const fmtStock = (insumo, kg) => (insumo.tipo === 'SILAJE' ? `${fmtToneladas(kg)
  * CU06 – Registrar compra o carga de insumo (el silaje propio se carga con su costo estimado).
  * Si recibe "compra", corrige una compra existente y el stock se ajusta por la diferencia.
  */
-function DialogoCompra({ insumo, compra, onCerrar, onGuardado }) {
+function DialogoCompra({ insumo, compra, cantidadSugerida, onCerrar, onGuardado }) {
   const [datos, setDatos] = useState(
     compra
       ? { fecha: compra.fecha.slice(0, 10), cantidadKg: compra.cantidadKg, precioTotal: compra.precioTotal }
-      : { fecha: hoyISO(), cantidadKg: '', precioTotal: '' },
+      : { fecha: hoyISO(), cantidadKg: cantidadSugerida ?? '', precioTotal: '' },
   );
   const campo = (n) => ({ value: datos[n], onChange: (e) => setDatos({ ...datos, [n]: e.target.value }) });
   const precioKg = Number(datos.precioTotal) / Number(datos.cantidadKg);
@@ -115,6 +118,40 @@ function HistorialCompras({ insumo, onEditar }) {
   );
 }
 
+/** RF11 – Cuánto dura el stock al ritmo de consumo previsto. */
+function Proyeccion({ insumo }) {
+  const p = insumo.proyeccion;
+  if (!p.consumoDiarioKg) {
+    return <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>Sin consumo previsto: definí las raciones de los lotes.</Typography>;
+  }
+  const estado = p.coberturaBaja ? (p.diasCobertura <= 3 ? 'critico' : 'aviso') : 'ok';
+  const fuente = p.fuenteConsumo === 'racion' ? 'según las raciones' : 'promedio de los últimos 14 días';
+  return (
+    <Box sx={{ mt: 2 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+        <ChipEstado estado={estado} label={`Alcanza para ${p.diasCobertura} día(s)`} />
+        <Typography variant="body2" color="text.secondary">hasta el {fmtFecha(p.fechaQuiebre)}</Typography>
+      </Box>
+      <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+        Consumo previsto: {fmtKg(p.consumoDiarioKg)}/día ({fuente})
+      </Typography>
+      <Box sx={{ width: '100%', height: 110, mt: 1 }}>
+        <ResponsiveContainer>
+          <AreaChart data={p.serie} margin={{ top: 6, right: 8, left: 0, bottom: 0 }}>
+            <XAxis dataKey="dia" tickFormatter={(d) => (d === 0 ? 'hoy' : `+${d}`)} interval={9} tick={{ fontSize: 11 }} padding={{ left: 14, right: 14 }} />
+            {/* El eje incluye el stock mínimo aunque el stock actual esté por debajo. */}
+            <YAxis hide domain={[0, (max) => Math.max(max, insumo.stockMinimoKg) * 1.05]} />
+            <Tooltip formatter={(v) => fmtKg(v)} labelFormatter={(d) => (d === 0 ? 'Hoy' : `Dentro de ${d} días`)} />
+            <ReferenceLine y={insumo.stockMinimoKg} stroke={COLORES.ocre} strokeDasharray="5 4" />
+            <Area type="monotone" dataKey="kg" stroke={COLORES.bosque} fill={COLORES.hojaClara} strokeWidth={2} isAnimationActive={false} />
+          </AreaChart>
+        </ResponsiveContainer>
+      </Box>
+      <Typography variant="caption" color="text.secondary">Stock proyectado a 30 días · línea punteada: stock mínimo</Typography>
+    </Box>
+  );
+}
+
 export default function Insumos() {
   const { datos, cargando, error, recargar } = useCarga(() => api.get('/insumos').then((r) => r.data));
   const [dialogo, setDialogo] = useState(null); // { tipo: 'compra' | 'config', insumo }
@@ -130,7 +167,7 @@ export default function Insumos() {
 
   return (
     <>
-      <Encabezado icono={<InventoryIcon />} titulo="Insumos y stock" subtitulo="Suplemento proteico y silaje de sorgo (RF03)" />
+      <Encabezado icono={<InventoryIcon />} titulo="Insumos y stock" subtitulo="Stock, consumo previsto y compras de suplemento y silaje" />
       <Grilla min={280}>
         {datos.map((i) => (
           <Card key={i.id} sx={{ borderColor: i.bajoMinimo ? 'warning.main' : undefined }}>
@@ -146,11 +183,21 @@ export default function Insumos() {
                 <Dato etiqueta="Stock mínimo" valor={fmtStock(i, i.stockMinimoKg)} />
                 <Dato etiqueta="Precio vigente" valor={`${fmtMonedaDecimales(i.precioKg)}/kg`} />
               </Grilla>
+              <Proyeccion insumo={i} />
             </CardContent>
-            <CardActions sx={{ px: 2, pb: 2 }}>
+            <CardActions sx={{ px: 2, pb: 2, flexWrap: 'wrap', gap: 1 }}>
               <Button variant="contained" onClick={() => setDialogo({ tipo: 'compra', insumo: i })}>
                 {i.tipo === 'SILAJE' ? 'Cargar silaje' : 'Registrar compra'}
               </Button>
+              {i.proyeccion.compraSugeridaKg > 0 && (
+                <Button
+                  color="warning"
+                  startIcon={<ShoppingCartIcon />}
+                  onClick={() => setDialogo({ tipo: 'compra', insumo: i, cantidadSugerida: i.proyeccion.compraSugeridaKg })}
+                >
+                  Comprar {fmtKg(i.proyeccion.compraSugeridaKg)}
+                </Button>
+              )}
               <Button onClick={() => setDialogo({ tipo: 'config', insumo: i })}>Configurar</Button>
             </CardActions>
           </Card>
@@ -165,7 +212,7 @@ export default function Insumos() {
         <HistorialCompras insumo={datos[historial]} onEditar={(c) => setDialogo({ tipo: 'compra', insumo: datos[historial], compra: c })} />
       )}
 
-      {dialogo?.tipo === 'compra' && <DialogoCompra insumo={dialogo.insumo} compra={dialogo.compra} onCerrar={() => setDialogo(null)} onGuardado={listo} />}
+      {dialogo?.tipo === 'compra' && <DialogoCompra insumo={dialogo.insumo} compra={dialogo.compra} cantidadSugerida={dialogo.cantidadSugerida} onCerrar={() => setDialogo(null)} onGuardado={listo} />}
       {dialogo?.tipo === 'config' && <DialogoConfigurar insumo={dialogo.insumo} onCerrar={() => setDialogo(null)} onGuardado={listo} />}
     </>
   );

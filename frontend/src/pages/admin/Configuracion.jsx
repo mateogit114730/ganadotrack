@@ -8,6 +8,8 @@ import { Cargando, ErrorCarga, Encabezado } from '../../components/Comunes.jsx';
 const AYUDA = {
   rendimiento_gancho: 'Proporción de kg de carne al gancho por kg vivo. Valor relevado para Angus: 0,57 (57 %).',
   dias_aviso_sanitario: 'Con cuántos días de anticipación se avisa de un evento sanitario programado.',
+  dias_cobertura_minima: 'Si al ritmo de consumo previsto un insumo alcanza para menos días, se genera una alerta.',
+  horizonte_compra_dias: 'La compra sugerida cubre el consumo de esta cantidad de días más el stock mínimo.',
 };
 
 function Parametro({ parametro, onGuardado }) {
