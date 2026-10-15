@@ -6,8 +6,9 @@ export const actualizarInsumoSchema = z
     stockMinimoKg: noNegativo('El stock mínimo').optional(),
     // Para el silaje de producción propia el precio por kg se carga manualmente.
     precioKg: noNegativo('El precio por kg').optional(),
+    materiaSecaPct: positivo('El % de materia seca').max(100, { error: 'El % de materia seca no puede superar 100' }).optional(),
   })
-  .refine((d) => d.stockMinimoKg !== undefined || d.precioKg !== undefined, {
+  .refine((d) => Object.values(d).some((v) => v !== undefined), {
     error: 'No hay datos para actualizar',
   });
 

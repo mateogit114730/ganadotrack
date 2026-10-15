@@ -77,3 +77,24 @@ export function margenBruto(precioVentaKg, kgCarne, costoTotal) {
   if (precioVentaKg === null || precioVentaKg === undefined) return null;
   return redondear(precioVentaKg * kgCarne - costoTotal, 2);
 }
+
+/** Kg de alimento sugeridos para el día = kg por cabeza por día (ración) × cabezas actuales. */
+export function kgSugeridos(kgCabezaDia, cabezas) {
+  return Math.round(kgCabezaDia * cabezas);
+}
+
+/** Kg de materia seca de un alimento = kg tal cual × % de materia seca / 100. */
+export function kgMateriaSeca(kg, materiaSecaPct) {
+  return redondear((kg * materiaSecaPct) / 100, 2);
+}
+
+/**
+ * Conversión alimenticia (kg de materia seca consumidos por kg de peso vivo ganado).
+ * CA = kg MS consumidos en el período / (aumento de peso promedio × cabezas).
+ * Cuanto menor, más eficiente el engorde. Devuelve null si el lote no ganó peso.
+ */
+export function conversionAlimenticia(kgMsConsumidos, aumentoPesoPromedio, cabezas) {
+  const kgGanados = aumentoPesoPromedio * cabezas;
+  if (!(kgGanados > 0)) return null;
+  return redondear(kgMsConsumidos / kgGanados, 2);
+}

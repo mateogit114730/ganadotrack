@@ -17,6 +17,7 @@ import { pesadasRouter } from './modules/pesadas/pesadas.routes.js';
 import { sanidadRouter } from './modules/sanidad/sanidad.routes.js';
 import { reportesRouter } from './modules/reportes/reportes.routes.js';
 import { parametrosRouter } from './modules/parametros/parametros.routes.js';
+import { racionRouter } from './modules/racion/racion.routes.js';
 
 export function crearApp() {
   const app = express();
@@ -44,6 +45,8 @@ export function crearApp() {
 
   app.use('/api/auth', authRouter);
   app.use('/api/usuarios', usuariosRouter);
+  // Antes de /api/lotes: lotesRouter exige rol ADMIN para todo lo que pasa por él.
+  app.use('/api', racionRouter);
   app.use('/api/lotes', lotesRouter);
   app.use('/api/insumos', insumosRouter);
   app.use('/api/alimentacion', alimentacionRouter);

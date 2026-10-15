@@ -16,6 +16,7 @@ const PASSWORD = process.env.SEED_PASSWORD;
 if (!PASSWORD) throw new Error('Defina SEED_PASSWORD en el archivo .env');
 
 async function limpiar() {
+  await prisma.racion.deleteMany();
   await prisma.registroAlimentacion.deleteMany();
   await prisma.compraInsumo.deleteMany();
   await prisma.pesada.deleteMany();
@@ -48,6 +49,7 @@ async function crearInsumos(admin) {
       precioKg: 480,
       stockKg: 1500, // por debajo del mínimo: genera alerta de stock en la demo
       stockMinimoKg: 2000,
+      materiaSecaPct: 90,
     },
   });
   const silaje = await prisma.insumo.create({
@@ -57,6 +59,7 @@ async function crearInsumos(admin) {
       precioKg: 45,
       stockKg: 180000,
       stockMinimoKg: 40000,
+      materiaSecaPct: 35,
     },
   });
 
@@ -91,6 +94,16 @@ async function cargarAlimentacion(lote, { suplemento, silaje }, racion, hasta, u
     }
   }
   await prisma.registroAlimentacion.createMany({ data: registros });
+}
+
+/** Ración vigente desde el ingreso del lote (kg por cabeza por día), definida por el veterinario. */
+async function cargarRacion(lote, { suplemento, silaje }, usuarioId) {
+  await prisma.racion.createMany({
+    data: [
+      { loteId: lote.id, insumoId: suplemento.id, kgCabezaDia: 1.5, vigenteDesde: lote.fechaIngreso, usuarioId },
+      { loteId: lote.id, insumoId: silaje.id, kgCabezaDia: 15, vigenteDesde: lote.fechaIngreso, usuarioId },
+    ],
+  });
 }
 
 /** Pesadas con la GDP calculada igual que en la API. */
@@ -159,6 +172,7 @@ async function main() {
       precioVentaKg: 9800,
     },
   });
+  await cargarRacion(lote1, insumos, veterinario.id);
   await cargarAlimentacion(lote1, insumos, { suplementoKg: 180, silajeKg: 1800 }, HOY, encargado.id);
   await cargarPesadas(lote1, [
     { fecha: hace(28), peso: 394 },
@@ -187,6 +201,7 @@ async function main() {
       gdpObjetivo: 0.45,
     },
   });
+  await cargarRacion(lote2, insumos, veterinario.id);
   await cargarAlimentacion(lote2, insumos, { suplementoKg: 120, silajeKg: 1200 }, HOY, encargado.id);
   await cargarPesadas(lote2, [
     { fecha: hace(64), peso: 390 },
@@ -214,6 +229,7 @@ async function main() {
       gdpObjetivo: 0.45,
     },
   });
+  await cargarRacion(lote3, insumos, veterinario.id);
   await cargarAlimentacion(lote3, insumos, { suplementoKg: 150, silajeKg: 1500 }, HOY, encargado.id);
   await prisma.eventoSanitario.createMany({
     data: [

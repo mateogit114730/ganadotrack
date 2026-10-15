@@ -61,6 +61,7 @@ model Usuario {
   pesadas        Pesada[]
   eventos        EventoSanitario[]
   bajas          Baja[]
+  raciones       Racion[]
 
   @@map("usuario")
 }
@@ -84,21 +85,25 @@ model Lote {
   pesadas        Pesada[]
   eventos        EventoSanitario[]
   bajas          Baja[]
+  raciones       Racion[]
 
   @@index([estado])
   @@map("lote")
 }
 
 model Insumo {
-  id            Int        @id @default(autoincrement())
-  nombre        String     @unique @db.VarChar(80)
-  tipo          TipoInsumo
-  stockKg       Decimal    @default(0) @map("stock_kg") @db.Decimal(12, 2)
-  stockMinimoKg Decimal    @default(0) @map("stock_minimo_kg") @db.Decimal(12, 2)
-  precioKg      Decimal    @default(0) @map("precio_kg") @db.Decimal(12, 2)
+  id             Int        @id @default(autoincrement())
+  nombre         String     @unique @db.VarChar(80)
+  tipo           TipoInsumo
+  stockKg        Decimal    @default(0) @map("stock_kg") @db.Decimal(12, 2)
+  stockMinimoKg  Decimal    @default(0) @map("stock_minimo_kg") @db.Decimal(12, 2)
+  precioKg       Decimal    @default(0) @map("precio_kg") @db.Decimal(12, 2)
+  // Porcentaje de materia seca (silaje ≈ 35 %, suplemento ≈ 90 %), para la conversión alimenticia.
+  materiaSecaPct Decimal    @default(100) @map("materia_seca_pct") @db.Decimal(5, 2)
 
   compras        CompraInsumo[]
   alimentaciones RegistroAlimentacion[]
+  raciones       Racion[]
 
   @@map("insumo")
 }
@@ -138,6 +143,25 @@ model RegistroAlimentacion {
   @@unique([loteId, insumoId, fecha])
   @@index([loteId, fecha])
   @@map("registro_alimentacion")
+}
+
+// Ración definida para un lote: kg de cada insumo por cabeza y por día, con historial.
+// La vigente para un insumo es la de mayor vigente_desde que no supere la fecha consultada.
+model Racion {
+  id           Int      @id @default(autoincrement())
+  loteId       Int      @map("lote_id")
+  insumoId     Int      @map("insumo_id")
+  kgCabezaDia  Decimal  @map("kg_cabeza_dia") @db.Decimal(8, 3)
+  vigenteDesde DateTime @map("vigente_desde") @db.Date
+  usuarioId    Int?     @map("usuario_id")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  lote    Lote     @relation(fields: [loteId], references: [id])
+  insumo  Insumo   @relation(fields: [insumoId], references: [id])
+  usuario Usuario? @relation(fields: [usuarioId], references: [id])
+
+  @@unique([loteId, insumoId, vigenteDesde])
+  @@map("racion")
 }
 
 model Pesada {
