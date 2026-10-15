@@ -3,11 +3,24 @@
 import axios from 'axios';
 
 const CLAVE_TOKEN = 'ganadotrack.token';
+const CLAVE_USUARIO = 'ganadotrack.usuario';
 
 export const sesion = {
   token: () => localStorage.getItem(CLAVE_TOKEN),
   guardar: (token) => localStorage.setItem(CLAVE_TOKEN, token),
-  borrar: () => localStorage.removeItem(CLAVE_TOKEN),
+  // Copia del usuario para poder abrir la app sin conexión (RF14).
+  usuario: () => {
+    try {
+      return JSON.parse(localStorage.getItem(CLAVE_USUARIO));
+    } catch {
+      return null;
+    }
+  },
+  guardarUsuario: (usuario) => localStorage.setItem(CLAVE_USUARIO, JSON.stringify(usuario)),
+  borrar: () => {
+    localStorage.removeItem(CLAVE_TOKEN);
+    localStorage.removeItem(CLAVE_USUARIO);
+  },
 };
 
 export const api = axios.create({ baseURL: import.meta.env.VITE_API_URL ?? '/api' });

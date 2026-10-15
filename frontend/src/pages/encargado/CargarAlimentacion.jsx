@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import {
   Alert, AlertTitle, Box, Button, Card, CardContent, FormControlLabel, InputAdornment, Stack, Switch,
   TextField, Typography,
@@ -6,12 +6,16 @@ import {
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import GrassIcon from '@mui/icons-material/Grass';
 import EditIcon from '@mui/icons-material/EditOutlined';
+import CloudOffIcon from '@mui/icons-material/CloudOff';
+import PhoneAndroidIcon from '@mui/icons-material/PhoneAndroid';
 import { api, mensajeError } from '../../api/cliente.js';
 import { useCarga } from '../../utils/useCarga.js';
 import { Cargando, ErrorCarga, ChipEstado, EstadoVacio } from '../../components/Comunes.jsx';
 import { VacaSilueta } from '../../components/ilustraciones/index.jsx';
 import { COLORES } from '../../theme.js';
-import { fmtFecha, fmtKg, fmtMoneda } from '../../utils/formato.js';
+import { fmtFecha, fmtKg, fmtMoneda, hoyISO } from '../../utils/formato.js';
+import { descartar, encolar, esErrorDeRed, nuevoId } from '../../offline/colaAlimentacion.js';
+import { useColaOffline, useEnLinea } from '../../offline/hooks.js';
 
 const CLAVE_MODO_SOL = 'ganadotrack.modoSol';
 
@@ -23,8 +27,9 @@ function leerModoSol() {
   }
 }
 
-/** Estado de la carga de hoy de un lote según los insumos ya registrados. */
-function estadoDelDia(lote, insumos) {
+/** Estado de la carga de hoy de un lote según los insumos ya registrados o guardados en el teléfono. */
+function estadoDelDia(lote, insumos, enTelefono = false) {
+  if (enTelefono) return { estado: 'aviso', texto: 'En el teléfono' };
   if (lote.cargadoHoy.length >= insumos.length) return { estado: 'ok', texto: 'Cargado hoy' };
   if (lote.cargadoHoy.length > 0) return { estado: 'aviso', texto: 'Carga parcial' };
   return { estado: 'neutro', texto: 'Pendiente' };
@@ -76,9 +81,9 @@ function FormularioKilos({ lote, insumos, enviando, error, onConfirmar, onCancel
   );
 }
 
-function TarjetaLote({ lote, insumos, abierto, enviando, error, onAbrir, onCerrar, onConfirmar }) {
-  const { estado, texto } = estadoDelDia(lote, insumos);
-  const completo = estado === 'ok';
+function TarjetaLote({ lote, insumos, enTelefono, abierto, enviando, error, onAbrir, onCerrar, onConfirmar }) {
+  const { estado, texto } = estadoDelDia(lote, insumos, enTelefono);
+  const completo = estado === 'ok' || enTelefono;
   const conRacion = lote.racionSugerida.length > 0 && lote.cargadoHoy.length === 0;
 
   return (
@@ -90,10 +95,13 @@ function TarjetaLote({ lote, insumos, abierto, enviando, error, onAbrir, onCerra
             <Typography variant="h6" sx={{ lineHeight: 1.2 }}>{lote.nombre}</Typography>
             <Typography color="text.secondary">{lote.cabezasActuales} cabezas</Typography>
           </Box>
-          <ChipEstado estado={estado} label={texto} icon={completo ? <CheckCircleIcon /> : undefined} />
+          <ChipEstado estado={estado} label={texto} icon={enTelefono ? <PhoneAndroidIcon /> : completo ? <CheckCircleIcon /> : undefined} />
         </Box>
 
-        {completo && (
+        {enTelefono && (
+          <Typography color="text.secondary" sx={{ mt: 1.5 }}>Guardado sin conexión: se envía solo cuando vuelva la señal.</Typography>
+        )}
+        {completo && !enTelefono && (
           <Typography color="text.secondary" sx={{ mt: 1.5 }}>
             {lote.cargadoHoy.map((r) => `${insumos.find((i) => i.id === r.insumoId)?.nombre}: ${fmtKg(r.kg)}`).join(' · ')}
           </Typography>
@@ -154,6 +162,15 @@ export default function CargarAlimentacion() {
   const [errores, setErrores] = useState({});
   const [resultado, setResultado] = useState(null);
   const [modoSol, setModoSol] = useState(leerModoSol);
+  const enLinea = useEnLinea();
+  const alSincronizar = useCallback(
+    (enviadas) => {
+      setResultado({ sincronizadas: enviadas });
+      recargar();
+    },
+    [recargar],
+  );
+  const { cola, sincronizando, sincronizar } = useColaOffline(alSincronizar);
 
   if (cargando && !datos) return <Cargando texto="Buscando los lotes…" />;
   if (error) return <ErrorCarga mensaje={error} />;
@@ -174,20 +191,35 @@ export default function CargarAlimentacion() {
     }
     setEnviando(loteId);
     setErrores({ ...errores, [loteId]: null });
-    try {
-      const { data } = await api.post('/alimentacion', { loteId, items });
-      setResultado(data);
+    // La fecha es la de captura: si se envía más tarde (sin señal), el registro queda en el día correcto.
+    const operacion = { operacionId: nuevoId(), loteId, fecha: hoyISO(), items };
+    const guardarEnTelefono = async () => {
+      await encolar({ ...operacion, loteNombre: datos.lotes.find((l) => l.id === loteId)?.nombre });
+      setResultado({ enTelefono: true, lote: datos.lotes.find((l) => l.id === loteId)?.nombre });
       setAbierto(null);
-      recargar();
+    };
+    try {
+      if (!navigator.onLine) {
+        await guardarEnTelefono();
+      } else {
+        const { data } = await api.post('/alimentacion', operacion);
+        setResultado(data);
+        setAbierto(null);
+        recargar();
+      }
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (err) {
-      setErrores({ ...errores, [loteId]: mensajeError(err) });
+      if (esErrorDeRed(err)) await guardarEnTelefono();
+      else setErrores({ ...errores, [loteId]: mensajeError(err) });
     } finally {
       setEnviando(null);
     }
   };
 
-  const pendientes = datos.lotes.filter((l) => estadoDelDia(l, datos.insumos).estado !== 'ok').length;
+  const enTelefono = (loteId) => cola.some((o) => o.loteId === loteId && o.estado === 'pendiente');
+  const pendientes = datos.lotes.filter((l) => !enTelefono(l.id) && estadoDelDia(l, datos.insumos).estado !== 'ok').length;
+  const enCola = cola.filter((o) => o.estado === 'pendiente');
+  const conError = cola.filter((o) => o.estado === 'error');
 
   return (
     <Box sx={{ maxWidth: 680, mx: 'auto', zoom: modoSol ? 1.15 : 1 }}>
@@ -204,7 +236,46 @@ export default function CargarAlimentacion() {
         />
       </Box>
 
-      {resultado && (
+      {!enLinea && (
+        <Alert severity="warning" icon={<CloudOffIcon />} sx={{ mb: 2 }}>
+          <AlertTitle>Sin conexión</AlertTitle>
+          Podés seguir cargando: las cargas se guardan en el teléfono y se envían solas cuando vuelva la señal.
+        </Alert>
+      )}
+      {enCola.length > 0 && (
+        <Alert
+          severity="info"
+          icon={<PhoneAndroidIcon />}
+          sx={{ mb: 2 }}
+          action={enLinea && <Button color="inherit" size="small" onClick={sincronizar} disabled={sincronizando}>{sincronizando ? 'Enviando…' : 'Enviar ahora'}</Button>}
+        >
+          {enCola.length} carga(s) guardada(s) en el teléfono, pendientes de envío.
+        </Alert>
+      )}
+      {conError.map((o) => (
+        <Alert
+          key={o.operacionId}
+          severity="error"
+          sx={{ mb: 2 }}
+          action={<Button color="inherit" size="small" onClick={() => descartar(o.operacionId)}>Descartar</Button>}
+        >
+          <AlertTitle>No se pudo enviar la carga de {o.loteNombre} ({fmtFecha(o.fecha)})</AlertTitle>
+          {o.error}. Avisale al administrador.
+        </Alert>
+      ))}
+
+      {resultado?.enTelefono && (
+        <Alert severity="info" icon={<PhoneAndroidIcon />} sx={{ mb: 2 }} onClose={() => setResultado(null)}>
+          <AlertTitle>Guardado en el teléfono – {resultado.lote}</AlertTitle>
+          Se va a enviar automáticamente cuando vuelva la señal.
+        </Alert>
+      )}
+      {resultado?.sincronizadas && (
+        <Alert severity="success" sx={{ mb: 2 }} onClose={() => setResultado(null)}>
+          Se enviaron {resultado.sincronizadas} carga(s) que estaban guardadas en el teléfono.
+        </Alert>
+      )}
+      {resultado?.registros && (
         <Alert severity="success" icon={<CheckCircleIcon />} sx={{ mb: 2 }} onClose={() => setResultado(null)}>
           <AlertTitle>Registro guardado – {resultado.lote.nombre}</AlertTitle>
           {resultado.registros.map((r) => <div key={r.id}>{r.insumo.nombre}: {fmtKg(r.kg)}</div>)}
@@ -222,6 +293,7 @@ export default function CargarAlimentacion() {
               key={l.id}
               lote={l}
               insumos={datos.insumos}
+              enTelefono={enTelefono(l.id)}
               abierto={abierto === l.id}
               enviando={enviando === l.id}
               error={errores[l.id]}

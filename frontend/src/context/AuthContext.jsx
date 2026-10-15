@@ -14,13 +14,21 @@ export function AuthProvider({ children }) {
   const [usuario, setUsuario] = useState(null);
   const [cargando, setCargando] = useState(Boolean(sesion.token()));
 
-  // Si hay un token guardado, se recupera el usuario de la sesión.
+  // Si hay un token guardado, se recupera el usuario de la sesión. Sin conexión se usa
+  // la copia guardada, para que el encargado pueda cargar la alimentación igual (RF14).
   useEffect(() => {
     if (!sesion.token()) return;
     api
       .get('/auth/me')
-      .then(({ data }) => setUsuario(data))
-      .catch(() => sesion.borrar())
+      .then(({ data }) => {
+        sesion.guardarUsuario(data);
+        setUsuario(data);
+      })
+      .catch((err) => {
+        const guardado = sesion.usuario();
+        if (!err.response && guardado) setUsuario(guardado);
+        else sesion.borrar();
+      })
       .finally(() => setCargando(false));
   }, []);
 
@@ -33,6 +41,7 @@ export function AuthProvider({ children }) {
   const login = useCallback(async (email, password) => {
     const { data } = await api.post('/auth/login', { email, password });
     sesion.guardar(data.token);
+    sesion.guardarUsuario(data.usuario);
     setUsuario(data.usuario);
     return data.usuario;
   }, []);
@@ -42,9 +51,14 @@ export function AuthProvider({ children }) {
     setUsuario(null);
   }, []);
 
+  const actualizarUsuario = useCallback((datos) => {
+    sesion.guardarUsuario(datos);
+    setUsuario(datos);
+  }, []);
+
   const valor = useMemo(
-    () => ({ usuario, cargando, login, logout, actualizarUsuario: setUsuario }),
-    [usuario, cargando, login, logout],
+    () => ({ usuario, cargando, login, logout, actualizarUsuario }),
+    [usuario, cargando, login, logout, actualizarUsuario],
   );
   return <AuthContext.Provider value={valor}>{children}</AuthContext.Provider>;
 }

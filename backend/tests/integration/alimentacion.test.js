@@ -107,3 +107,31 @@ describe('Compras de insumos (CU06)', () => {
     expect(await stock(insumos.suplemento.id)).toBe(1000);
   });
 });
+
+describe('Sincronización de cargas sin conexión (RF14)', () => {
+  it('CP-76 reenviar la misma operación no duplica registros ni descuenta stock dos veces', async () => {
+    const operacionId = '6f1c2a3b-4d5e-4f60-8a7b-9c0d1e2f3a4b';
+    const items = [
+      { insumoId: insumos.suplemento.id, kg: 100 },
+      { insumoId: insumos.silaje.id, kg: 1000 },
+    ];
+    const primero = await registrar(items, { operacionId });
+    const segundo = await registrar(items, { operacionId });
+
+    expect(primero.status).toBe(201);
+    expect(segundo.status).toBe(200);
+    expect(segundo.body.repetido).toBe(true);
+    expect(segundo.body.costoDia).toBe(primero.body.costoDia);
+    expect(await prisma.registroAlimentacion.count()).toBe(2);
+    expect(await stock(insumos.suplemento.id)).toBe(900);
+  });
+
+  it('CP-77 una carga hecha sin conexión se registra con la fecha de captura', async () => {
+    const res = await registrar([{ insumoId: insumos.silaje.id, kg: 800 }], {
+      fecha: fechaRelativa(-1),
+      operacionId: '0b8e7d6c-5a4f-4e3d-9c2b-1a0f9e8d7c6b',
+    });
+    expect(res.status).toBe(201);
+    expect(res.body.registros[0].fecha.slice(0, 10)).toBe(fechaRelativa(-1));
+  });
+});

@@ -18,4 +18,6 @@ await sharp(isotipo)
   .flatten({ background: CREMA })
   .toFile('public/isotipo-maskable-512.png');
 await sharp(isotipo).resize(180, 180).flatten({ background: CREMA }).toFile('public/apple-touch-icon.png');
+// Logo completo liviano para la pantalla de inicio de sesión (el original pesa ~1 MB).
+await sharp(LOGO).resize(420, 420).png({ compressionLevel: 9, palette: true }).toFile('public/logo-420.png');
 console.log('Íconos generados en public/');

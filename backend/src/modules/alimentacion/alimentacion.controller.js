@@ -5,7 +5,8 @@ export async function opciones(req, res) {
 }
 
 export async function registrar(req, res) {
-  res.status(201).json(await servicio.registrar(req.body, req.usuario.id));
+  const resultado = await servicio.registrar(req.body, req.usuario.id);
+  res.status(resultado.repetido ? 200 : 201).json(resultado);
 }
 
 export async function listar(req, res) {
