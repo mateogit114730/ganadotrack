@@ -1,32 +1,138 @@
 import { useNavigate } from 'react-router-dom';
-import {
-  Badge, Box, Card, CardActionArea, CardContent, Chip, LinearProgress, Stack, Typography,
-} from '@mui/material';
+import { Box, Button, Card, CardActionArea, CardContent, LinearProgress, Stack, Typography } from '@mui/material';
+import PetsIcon from '@mui/icons-material/Pets';
+import PaymentsIcon from '@mui/icons-material/PaymentsOutlined';
+import ScaleIcon from '@mui/icons-material/MonitorWeightOutlined';
+import TrendingUpIcon from '@mui/icons-material/TrendingUp';
+import VaccinesIcon from '@mui/icons-material/VaccinesOutlined';
+import InventoryIcon from '@mui/icons-material/Inventory2Outlined';
+import TrendingDownIcon from '@mui/icons-material/TrendingDown';
+import AddIcon from '@mui/icons-material/Add';
 import { api } from '../../api/cliente.js';
 import { useCarga } from '../../utils/useCarga.js';
-import { Cargando, ErrorCarga, Grilla, Indicador, Dato, Encabezado } from '../../components/Comunes.jsx';
+import {
+  Cargando, ErrorCarga, Grilla, Indicador, Dato, EstadoVacio, ChipEstado, Sparkline,
+} from '../../components/Comunes.jsx';
 import ListaAlertas from '../../components/ListaAlertas.jsx';
+import { PaisajeCampo } from '../../components/ilustraciones/index.jsx';
+import { COLORES } from '../../theme.js';
 import { fmtFecha, fmtGdp, fmtKg, fmtMoneda, fmtNumero, fmtToneladas } from '../../utils/formato.js';
+
+const GRUPOS_ALERTA = [
+  { tipo: 'SANITARIA', titulo: 'Sanidad', icono: <VaccinesIcon fontSize="small" /> },
+  { tipo: 'STOCK', titulo: 'Stock', icono: <InventoryIcon fontSize="small" /> },
+  { tipo: 'GDP', titulo: 'Ganancia de peso', icono: <TrendingDownIcon fontSize="small" /> },
+];
+
+function TarjetaLote({ lote, onAbrir }) {
+  const ind = lote.indicadores;
+  const avance = Math.max(0, Math.min(100, ((ind.pesoActual - lote.pesoIngreso) / (lote.pesoObjetivo - lote.pesoIngreso)) * 100));
+  return (
+    <Card>
+      <CardActionArea onClick={onAbrir}>
+        <CardContent>
+          <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1, mb: 1.5, flexWrap: 'wrap' }}>
+            <Box sx={{ flex: 1, minWidth: 160 }}>
+              <Typography variant="h6" sx={{ lineHeight: 1.2 }}>{lote.nombre}</Typography>
+              <Typography variant="body2" color="text.secondary">
+                {ind.diasEnFeedlot} días en el corral · {ind.cabezasActuales} cabezas
+              </Typography>
+            </Box>
+            <Stack direction="row" spacing={0.5} sx={{ flexWrap: 'wrap', gap: 0.5 }}>
+              {ind.bajoRendimiento && <ChipEstado estado="aviso" label="GDP baja" />}
+              {ind.alcanzoObjetivo && <ChipEstado estado="ok" label="Llegó al objetivo" />}
+              {lote.alertas > 0 && <ChipEstado estado="critico" label={`${lote.alertas} alerta${lote.alertas > 1 ? 's' : ''}`} />}
+            </Stack>
+          </Box>
+          <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
+            <Box sx={{ flex: 1, minWidth: 220 }}>
+              <Grilla min={120} gap={1.5}>
+                <Dato etiqueta="Peso actual" valor={fmtKg(ind.pesoActual, 1)} />
+                <Dato etiqueta="Última GDP" valor={fmtGdp(ind.ultimaGdp)} />
+                <Dato etiqueta="Costo acumulado" valor={fmtMoneda(ind.costoTotal)} />
+                <Dato etiqueta="Llega al objetivo" valor={ind.fechaEstimadaObjetivo ? fmtFecha(ind.fechaEstimadaObjetivo) : '—'} />
+              </Grilla>
+            </Box>
+            {lote.seriePeso.length > 1 && (
+              <Box sx={{ textAlign: 'center' }}>
+                <Sparkline valores={lote.seriePeso} ancho={130} alto={44} />
+                <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>evolución de peso</Typography>
+              </Box>
+            )}
+          </Box>
+          <Box sx={{ mt: 1.5 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+              <Typography variant="caption" color="text.secondary">{fmtKg(lote.pesoIngreso)}</Typography>
+              <Typography variant="caption" sx={{ fontWeight: 700 }}>{fmtNumero(avance)} % del objetivo</Typography>
+              <Typography variant="caption" color="text.secondary">{fmtKg(lote.pesoObjetivo)}</Typography>
+            </Box>
+            <LinearProgress variant="determinate" value={avance} color="secondary" sx={{ height: 10 }} />
+          </Box>
+        </CardContent>
+      </CardActionArea>
+    </Card>
+  );
+}
+
+function StockInsumo({ insumo }) {
+  const escala = Math.max(insumo.stockKg, insumo.stockMinimoKg * 3, 1);
+  const fmt = insumo.tipo === 'SILAJE' ? fmtToneladas : fmtKg;
+  return (
+    <Card sx={{ borderColor: insumo.bajoMinimo ? 'warning.main' : undefined }}>
+      <CardContent sx={{ py: 1.5, '&:last-child': { pb: 1.5 } }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 1 }}>
+          <Typography sx={{ fontWeight: 700 }}>{insumo.nombre}</Typography>
+          {insumo.bajoMinimo && <ChipEstado estado="aviso" label="Bajo mínimo" />}
+        </Box>
+        <Typography variant="h6" color={insumo.bajoMinimo ? 'warning.dark' : 'primary'}>{fmt(insumo.stockKg)}</Typography>
+        <LinearProgress
+          variant="determinate"
+          value={(insumo.stockKg / escala) * 100}
+          color={insumo.bajoMinimo ? 'warning' : 'secondary'}
+          sx={{ height: 8, my: 0.5 }}
+        />
+        <Typography variant="caption" color="text.secondary">Mínimo {fmt(insumo.stockMinimoKg)}</Typography>
+      </CardContent>
+    </Card>
+  );
+}
 
 /** CU12 – Dashboard: lotes activos, alertas, resumen financiero y stock (RF07). */
 export default function Dashboard() {
   const navegar = useNavigate();
   const { datos, cargando, error } = useCarga(() => api.get('/dashboard').then((r) => r.data));
 
-  if (cargando) return <Cargando />;
+  if (cargando && !datos) return <Cargando texto="Recorriendo los corrales…" />;
   if (error) return <ErrorCarga mensaje={error} />;
 
   const { resumen, lotes, alertas, insumos } = datos;
 
   return (
     <>
-      <Encabezado titulo="Resumen del feedlot" subtitulo={`${resumen.lotesActivos} lote(s) activo(s)`} />
+      <Card sx={{ position: 'relative', overflow: 'hidden', mb: 3, minHeight: 150, bgcolor: '#FBF6E9' }}>
+        <PaisajeCampo
+          sx={{ position: 'absolute', right: 0, top: 0, height: '100%', width: { xs: '100%', md: '62%' }, opacity: { xs: 0.35, md: 1 } }}
+        />
+        <Box
+          sx={{
+            position: 'absolute', inset: 0,
+            background: { md: 'linear-gradient(90deg, #FBF6E9 38%, rgba(251,246,233,0) 60%)' },
+          }}
+        />
+        <Box sx={{ position: 'relative', p: { xs: 2.5, md: 3.5 }, maxWidth: 520 }}>
+          <Typography variant="h4" sx={{ color: 'primary.main', fontSize: { xs: 26, md: 32 } }}>Resumen del feedlot</Typography>
+          <Typography sx={{ fontWeight: 600, mt: 0.5 }}>
+            {resumen.lotesActivos} lote(s) en el corral · {fmtNumero(resumen.cabezas)} cabezas · {resumen.alertas} alerta(s)
+          </Typography>
+        </Box>
+      </Card>
 
-      <Grilla min={200}>
-        <Indicador titulo="Cabezas en feedlot" valor={fmtNumero(resumen.cabezas)} detalle={`${resumen.lotesActivos} lotes activos`} />
-        <Indicador titulo="Costo acumulado" valor={fmtMoneda(resumen.costoTotal)} detalle="Alimentación + sanidad" />
-        <Indicador titulo="Carne estimada al gancho" valor={fmtKg(resumen.kgCarneEstimados)} detalle="Rendimiento 57 %" />
+      <Grilla min={210}>
+        <Indicador icono={<PetsIcon />} titulo="Cabezas en el feedlot" valor={fmtNumero(resumen.cabezas)} detalle={`${resumen.lotesActivos} lotes activos`} />
+        <Indicador icono={<PaymentsIcon />} titulo="Costo acumulado" valor={fmtMoneda(resumen.costoTotal)} detalle="Alimentación + sanidad" />
+        <Indicador icono={<ScaleIcon />} titulo="Carne estimada al gancho" valor={fmtKg(resumen.kgCarneEstimados)} detalle="Rendimiento 57 %" />
         <Indicador
+          icono={<TrendingUpIcon />}
           titulo="Margen bruto estimado"
           valor={fmtMoneda(resumen.margenEstimado)}
           detalle={resumen.lotesConPrecio ? `${resumen.lotesConPrecio} lote(s) con precio de venta` : 'Cargue el precio de venta en cada lote'}
@@ -34,65 +140,43 @@ export default function Dashboard() {
         />
       </Grilla>
 
-      <Box sx={{ display: 'grid', gap: 3, mt: 3, gridTemplateColumns: { xs: '1fr', lg: '2fr 1fr' } }}>
+      <Box sx={{ display: 'grid', gap: 3, mt: 3, gridTemplateColumns: { xs: '1fr', lg: '1.7fr 1fr' } }}>
         <Box>
-          <Typography variant="h6" gutterBottom>Lotes activos</Typography>
-          {lotes.length === 0 && <Typography color="text.secondary">No hay lotes activos. Cree uno desde “Lotes”.</Typography>}
-          <Stack spacing={2}>
-            {lotes.map((l) => {
-              const ind = l.indicadores;
-              const avance = Math.min(100, ((ind.pesoActual - l.pesoIngreso) / (l.pesoObjetivo - l.pesoIngreso)) * 100);
-              return (
-                <Card key={l.id}>
-                  <CardActionArea onClick={() => navegar(`/lotes/${l.id}`)}>
-                    <CardContent>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1, flexWrap: 'wrap' }}>
-                        <Typography variant="subtitle1" sx={{ fontWeight: 700, flex: 1 }}>{l.nombre}</Typography>
-                        {ind.bajoRendimiento && <Chip size="small" color="warning" label="GDP baja" />}
-                        {ind.alcanzoObjetivo && <Chip size="small" color="success" label="Peso objetivo" />}
-                        {l.alertas > 0 && (
-                          <Badge badgeContent={l.alertas} color="error"><Chip size="small" label="Alertas" variant="outlined" /></Badge>
-                        )}
-                      </Box>
-                      <Grilla min={130} gap={1.5}>
-                        <Dato etiqueta="Días en feedlot" valor={ind.diasEnFeedlot} />
-                        <Dato etiqueta="Cabezas" valor={ind.cabezasActuales} />
-                        <Dato etiqueta="Peso actual" valor={fmtKg(ind.pesoActual, 1)} />
-                        <Dato etiqueta="Última GDP" valor={fmtGdp(ind.ultimaGdp)} />
-                        <Dato etiqueta="Costo acumulado" valor={fmtMoneda(ind.costoTotal)} />
-                        <Dato etiqueta="Llegada estimada" valor={ind.fechaEstimadaObjetivo ? fmtFecha(ind.fechaEstimadaObjetivo) : '—'} />
-                      </Grilla>
-                      <Box sx={{ mt: 1.5 }}>
-                        <Typography variant="caption" color="text.secondary">
-                          Avance hacia {fmtKg(l.pesoObjetivo)}: {fmtNumero(Math.max(0, avance))} %
-                        </Typography>
-                        <LinearProgress variant="determinate" value={Math.max(0, avance)} color="secondary" sx={{ height: 8, borderRadius: 4 }} />
-                      </Box>
-                    </CardContent>
-                  </CardActionArea>
-                </Card>
-              );
-            })}
-          </Stack>
+          <Typography variant="h6" gutterBottom>Lotes en el corral</Typography>
+          {lotes.length === 0 ? (
+            <EstadoVacio
+              titulo="Todavía no hay lotes en el feedlot"
+              texto="Cuando ingrese una tropa, cargala para empezar a seguir su engorde."
+              accion={<Button variant="contained" startIcon={<AddIcon />} onClick={() => navegar('/lotes')}>Nuevo lote</Button>}
+            />
+          ) : (
+            <Stack spacing={2}>
+              {lotes.map((l) => <TarjetaLote key={l.id} lote={l} onAbrir={() => navegar(`/lotes/${l.id}`)} />)}
+            </Stack>
+          )}
         </Box>
 
         <Box>
           <Typography variant="h6" gutterBottom>Alertas ({alertas.length})</Typography>
-          <ListaAlertas alertas={alertas} enlazarLotes />
+          {alertas.length === 0 && <ListaAlertas alertas={[]} />}
+          <Stack spacing={2}>
+            {GRUPOS_ALERTA.map((g) => {
+              const delGrupo = alertas.filter((a) => a.tipo === g.tipo);
+              if (!delGrupo.length) return null;
+              return (
+                <Box key={g.tipo}>
+                  <Typography variant="subtitle2" sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mb: 1, color: COLORES.tierra }}>
+                    {g.icono} {g.titulo}
+                  </Typography>
+                  <ListaAlertas alertas={delGrupo} enlazarLotes />
+                </Box>
+              );
+            })}
+          </Stack>
 
           <Typography variant="h6" sx={{ mt: 3 }} gutterBottom>Stock de insumos</Typography>
-          <Stack spacing={1}>
-            {insumos.map((i) => (
-              <Card key={i.id} sx={{ borderColor: i.bajoMinimo ? 'warning.main' : undefined }}>
-                <CardContent sx={{ py: 1.5, '&:last-child': { pb: 1.5 } }}>
-                  <Typography sx={{ fontWeight: 600 }}>{i.nombre}</Typography>
-                  <Typography variant="body2" color={i.bajoMinimo ? 'warning.main' : 'text.secondary'}>
-                    {i.tipo === 'SILAJE' ? fmtToneladas(i.stockKg) : fmtKg(i.stockKg)} disponibles
-                    {' · '}mínimo {i.tipo === 'SILAJE' ? fmtToneladas(i.stockMinimoKg) : fmtKg(i.stockMinimoKg)}
-                  </Typography>
-                </CardContent>
-              </Card>
-            ))}
+          <Stack spacing={1.5}>
+            {insumos.map((i) => <StockInsumo key={i.id} insumo={i} />)}
           </Stack>
         </Box>
       </Box>

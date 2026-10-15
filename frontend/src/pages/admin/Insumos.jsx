@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import {
-  Alert, Box, Button, Card, CardActions, CardContent, Chip, InputAdornment, Tab, Table, TableBody,
+  Alert, Box, Button, Card, CardActions, CardContent, InputAdornment, Tab, Table, TableBody,
   TableCell, TableContainer, TableHead, TableRow, Tabs, TextField, Typography,
 } from '@mui/material';
+import InventoryIcon from '@mui/icons-material/Inventory2Outlined';
 import { api } from '../../api/cliente.js';
 import { useCarga } from '../../utils/useCarga.js';
-import { Cargando, ErrorCarga, Encabezado, Grilla, Dato } from '../../components/Comunes.jsx';
+import { Cargando, ErrorCarga, Encabezado, Grilla, Dato, ChipEstado } from '../../components/Comunes.jsx';
 import DialogoFormulario from '../../components/DialogoFormulario.jsx';
 import { fmtFecha, fmtKg, fmtMoneda, fmtMonedaDecimales, fmtToneladas, hoyISO } from '../../utils/formato.js';
 
@@ -111,14 +112,14 @@ export default function Insumos() {
 
   return (
     <>
-      <Encabezado titulo="Insumos y stock" subtitulo="Suplemento proteico y silaje de sorgo (RF03)" />
+      <Encabezado icono={<InventoryIcon />} titulo="Insumos y stock" subtitulo="Suplemento proteico y silaje de sorgo (RF03)" />
       <Grilla min={280}>
         {datos.map((i) => (
           <Card key={i.id} sx={{ borderColor: i.bajoMinimo ? 'warning.main' : undefined }}>
             <CardContent>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
                 <Typography variant="h6" sx={{ flex: 1 }}>{i.nombre}</Typography>
-                {i.bajoMinimo && <Chip color="warning" size="small" label="Bajo mínimo" />}
+                {i.bajoMinimo && <ChipEstado estado="aviso" label="Bajo mínimo" />}
               </Box>
               <Typography variant="h4" color={i.bajoMinimo ? 'warning.dark' : 'primary'}>
                 {i.tipo === 'SILAJE' ? fmtToneladas(i.stockKg) : fmtKg(i.stockKg)}

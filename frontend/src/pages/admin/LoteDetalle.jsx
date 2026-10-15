@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link as RouterLink, useParams } from 'react-router-dom';
 import {
-  Alert, AlertTitle, Box, Button, Card, CardContent, Chip, IconButton, InputAdornment, Stack, Tab,
+  Alert, AlertTitle, Box, Button, Card, CardContent, IconButton, InputAdornment, Stack, Tab,
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Tabs, TextField, Typography,
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
@@ -14,7 +14,7 @@ import {
 } from 'recharts';
 import { api, mensajeError } from '../../api/cliente.js';
 import { useCarga } from '../../utils/useCarga.js';
-import { Cargando, ErrorCarga, Grilla, Indicador, Dato } from '../../components/Comunes.jsx';
+import { Cargando, ErrorCarga, Grilla, Indicador, Dato, ChipEstado } from '../../components/Comunes.jsx';
 import DialogoFormulario from '../../components/DialogoFormulario.jsx';
 import {
   ETIQUETAS, fmtFecha, fmtGdp, fmtKg, fmtMoneda, fmtMonedaDecimales, fmtNumero, hoyISO,
@@ -270,7 +270,7 @@ function TabSanidad({ eventos, bajas }) {
                   <TableCell>{[e.producto, e.dosis].filter(Boolean).join(' · ') || '—'}</TableCell>
                   <TableCell align="right">{e.estado === 'REALIZADO' ? fmtMoneda(e.costo) : '—'}</TableCell>
                   <TableCell>
-                    <Chip size="small" label={e.estado === 'REALIZADO' ? 'Realizado' : 'Pendiente'} color={e.estado === 'REALIZADO' ? 'success' : 'warning'} variant="outlined" />
+                    <ChipEstado estado={e.estado === 'REALIZADO' ? 'ok' : 'aviso'} label={e.estado === 'REALIZADO' ? 'Realizado' : 'Pendiente'} />
                   </TableCell>
                 </TableRow>
               ))}
@@ -403,7 +403,7 @@ export default function LoteDetalle() {
             {!activo && ` · Cerrado el ${fmtFecha(lote.fechaCierre)}`}
           </Typography>
         </Box>
-        <Chip label={activo ? 'Activo' : 'Cerrado'} color={activo ? 'primary' : 'default'} />
+        <ChipEstado estado={activo ? 'ok' : 'neutro'} label={activo ? 'Activo' : 'Cerrado'} sx={{ height: 30, fontSize: 14 }} />
         {activo && (
           <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }}>
             <Button variant="contained" startIcon={<MonitorWeightIcon />} onClick={() => setDialogo('pesada')}>Registrar pesada</Button>

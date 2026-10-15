@@ -5,6 +5,7 @@ import {
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/PersonAdd';
 import KeyIcon from '@mui/icons-material/Key';
+import PeopleIcon from '@mui/icons-material/PeopleOutline';
 import { api, mensajeError } from '../../api/cliente.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useCarga } from '../../utils/useCarga.js';
@@ -73,6 +74,7 @@ export default function Usuarios() {
   return (
     <>
       <Encabezado
+        icono={<PeopleIcon />}
         titulo="Usuarios"
         subtitulo="Administrador: acceso completo · Encargado: alimentación · Veterinario: sanidad"
         acciones={<Button variant="contained" startIcon={<AddIcon />} onClick={() => setDialogo({ tipo: 'nuevo' })}>Nuevo usuario</Button>}

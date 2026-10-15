@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Button, Card, Chip, InputAdornment, Tab, Table, TableBody, TableCell, TableContainer, TableHead,
+  Button, Card, InputAdornment, Tab, Table, TableBody, TableCell, TableContainer, TableHead,
   TableRow, Tabs, TextField,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import PetsIcon from '@mui/icons-material/Pets';
 import { api } from '../../api/cliente.js';
 import { useCarga } from '../../utils/useCarga.js';
-import { Cargando, ErrorCarga, Encabezado, Grilla } from '../../components/Comunes.jsx';
+import { Cargando, ErrorCarga, Encabezado, Grilla, ChipEstado, EstadoVacio } from '../../components/Comunes.jsx';
 import DialogoFormulario from '../../components/DialogoFormulario.jsx';
 import { fmtFecha, fmtGdp, fmtKg, fmtMoneda, hoyISO } from '../../utils/formato.js';
 
@@ -65,6 +66,7 @@ export default function Lotes() {
   return (
     <>
       <Encabezado
+        icono={<PetsIcon />}
         titulo="Lotes"
         subtitulo="Lotes de feedlot con su evolución y costos"
         acciones={<Button variant="contained" startIcon={<AddIcon />} onClick={() => setDialogo(true)}>Nuevo lote</Button>}
@@ -95,7 +97,7 @@ export default function Lotes() {
               </TableHead>
               <TableBody>
                 {datos.length === 0 && (
-                  <TableRow><TableCell colSpan={8} align="center">No hay lotes para mostrar.</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={8}><EstadoVacio titulo="No hay lotes para mostrar" texto="Cambiá el filtro o cargá un lote nuevo." /></TableCell></TableRow>
                 )}
                 {datos.map((l) => (
                   <TableRow key={l.id} hover sx={{ cursor: 'pointer' }} onClick={() => navegar(`/lotes/${l.id}`)}>
@@ -106,11 +108,11 @@ export default function Lotes() {
                     <TableCell align="right">{fmtKg(l.indicadores.pesoActual, 1)}</TableCell>
                     <TableCell align="right">
                       {fmtGdp(l.indicadores.ultimaGdp)}
-                      {l.indicadores.bajoRendimiento && <Chip size="small" color="warning" label="baja" sx={{ ml: 1 }} />}
+                      {l.indicadores.bajoRendimiento && <ChipEstado estado="aviso" label="baja" sx={{ ml: 1 }} />}
                     </TableCell>
                     <TableCell align="right">{fmtMoneda(l.indicadores.costoTotal)}</TableCell>
                     <TableCell>
-                      <Chip size="small" label={l.estado === 'ACTIVO' ? 'Activo' : 'Cerrado'} color={l.estado === 'ACTIVO' ? 'primary' : 'default'} />
+                      <ChipEstado estado={l.estado === 'ACTIVO' ? 'ok' : 'neutro'} label={l.estado === 'ACTIVO' ? 'Activo' : 'Cerrado'} />
                     </TableCell>
                   </TableRow>
                 ))}

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Alert, Box, Button, Card, CardContent, Stack, TextField, Typography } from '@mui/material';
+import SettingsIcon from '@mui/icons-material/SettingsOutlined';
 import { api, mensajeError } from '../../api/cliente.js';
 import { useCarga } from '../../utils/useCarga.js';
 import { Cargando, ErrorCarga, Encabezado } from '../../components/Comunes.jsx';
@@ -43,7 +44,7 @@ export default function Configuracion() {
   if (error) return <ErrorCarga mensaje={error} />;
   return (
     <>
-      <Encabezado titulo="Configuración" subtitulo="Parámetros usados en los cálculos y las alertas" />
+      <Encabezado icono={<SettingsIcon />} titulo="Configuración" subtitulo="Parámetros usados en los cálculos y las alertas" />
       <Stack spacing={2} sx={{ maxWidth: 640 }}>
         {datos.map((p) => <Parametro key={p.clave} parametro={p} onGuardado={recargar} />)}
       </Stack>
