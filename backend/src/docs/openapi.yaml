@@ -1,0 +1,587 @@
+openapi: 3.0.3
+info:
+  title: GanadoTrack API
+  version: 1.0.1
+  description: |
+    API REST del sistema de gestión de feedlot GanadoTrack.
+
+    **Autenticación:** `POST /auth/login` devuelve un token JWT. Enviarlo en cada petición como
+    `Authorization: Bearer <token>`. El token vence tras 8 h sin actividad; mientras el usuario
+    trabaja, la API envía un token nuevo en el encabezado `X-Token-Renovado`.
+
+    **Roles:** ADMIN (todo), ENCARGADO (alimentación), VETERINARIO (sanidad y alertas sanitarias).
+
+    **Unidades:** pesos en kg, importes en ARS, fechas `AAAA-MM-DD`.
+
+    **Errores:** `{ "error": "mensaje", "detalles": [{ "campo": "...", "mensaje": "..." }] }` con
+    400 (datos inválidos), 401 (sin sesión), 403 (rol sin permiso), 404 (no existe), 409 (conflicto de negocio).
+servers:
+  - url: /api
+tags:
+  - name: Autenticación
+  - name: Usuarios
+  - name: Lotes
+  - name: Insumos
+  - name: Alimentación
+  - name: Pesadas
+  - name: Sanidad
+  - name: Reportes
+  - name: Parámetros
+security:
+  - bearerAuth: []
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    Id:
+      name: id
+      in: path
+      required: true
+      schema: { type: integer }
+  responses:
+    Error400: { description: Datos inválidos, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+    Error401: { description: Sesión no iniciada o expirada, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+    Error403: { description: El rol no tiene permiso, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+    Error404: { description: No encontrado, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+    Error409: { description: Conflicto con una regla de negocio, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+  schemas:
+    Error:
+      type: object
+      properties:
+        error: { type: string, example: Datos inválidos }
+        detalles:
+          type: array
+          items:
+            type: object
+            properties:
+              campo: { type: string, example: pesoObjetivo }
+              mensaje: { type: string, example: El peso objetivo debe ser mayor al peso de ingreso }
+    Usuario:
+      type: object
+      properties:
+        id: { type: integer }
+        nombre: { type: string }
+        email: { type: string }
+        rol: { type: string, enum: [ADMIN, ENCARGADO, VETERINARIO] }
+        activo: { type: boolean }
+    Indicadores:
+      type: object
+      description: Indicadores calculados del lote (no se guardan, se calculan en cada consulta).
+      properties:
+        diasEnFeedlot: { type: integer, example: 45 }
+        cabezasActuales: { type: integer, example: 118 }
+        bajas: { type: integer, example: 2 }
+        pesoActual: { type: number, example: 405.5 }
+        fechaUltimaPesada: { type: string, format: date, nullable: true }
+        ultimaGdp: { type: number, nullable: true, example: 0.85 }
+        gdpObjetivo: { type: number, example: 0.8 }
+        bajoRendimiento: { type: boolean }
+        alcanzoObjetivo: { type: boolean }
+        diasRestantes: { type: integer, nullable: true, example: 18 }
+        fechaEstimadaObjetivo: { type: string, format: date, nullable: true }
+        costoAlimentacion: { type: number }
+        costoSanitario: { type: number }
+        costoTotal: { type: number }
+        rendimientoGancho: { type: number, example: 0.57 }
+        kgCarneEstimados: { type: number }
+        costoPorKgCarne: { type: number, nullable: true }
+        precioVentaKg: { type: number, nullable: true }
+        margenBruto: { type: number, nullable: true }
+        calculoPreliminar: { type: boolean, description: true si el lote aún no tiene pesadas }
+    Lote:
+      type: object
+      properties:
+        id: { type: integer }
+        nombre: { type: string, example: Lote 12 - Angus }
+        fechaIngreso: { type: string, format: date }
+        cantidadInicial: { type: integer, example: 120 }
+        pesoIngreso: { type: number, example: 380 }
+        pesoObjetivo: { type: number, example: 420 }
+        gdpObjetivo: { type: number, example: 0.8 }
+        precioVentaKg: { type: number, nullable: true }
+        estado: { type: string, enum: [ACTIVO, CERRADO] }
+        fechaCierre: { type: string, format: date, nullable: true }
+        pesoFinal: { type: number, nullable: true }
+        observaciones: { type: string, nullable: true }
+        indicadores: { $ref: '#/components/schemas/Indicadores' }
+    LoteNuevo:
+      type: object
+      required: [nombre, fechaIngreso, cantidadInicial, pesoIngreso, pesoObjetivo, gdpObjetivo]
+      properties:
+        nombre: { type: string, example: Lote 12 - Angus }
+        fechaIngreso: { type: string, format: date, example: '2026-09-01' }
+        cantidadInicial: { type: integer, example: 120 }
+        pesoIngreso: { type: number, example: 380 }
+        pesoObjetivo: { type: number, example: 420 }
+        gdpObjetivo: { type: number, example: 0.8 }
+        observaciones: { type: string }
+    Insumo:
+      type: object
+      properties:
+        id: { type: integer }
+        nombre: { type: string, example: Suplemento proteico 18% }
+        tipo: { type: string, enum: [SUPLEMENTO, SILAJE] }
+        stockKg: { type: number }
+        stockMinimoKg: { type: number }
+        precioKg: { type: number }
+        bajoMinimo: { type: boolean }
+    EventoSanitario:
+      type: object
+      properties:
+        id: { type: integer }
+        loteId: { type: integer }
+        tipo: { type: string, enum: [VACUNA, ANTIPARASITARIO, GARRAPATA, OTRO] }
+        nombre: { type: string }
+        producto: { type: string, nullable: true }
+        fechaProgramada: { type: string, format: date }
+        estado: { type: string, enum: [PENDIENTE, REALIZADO] }
+        fechaRealizada: { type: string, format: date, nullable: true }
+        dosis: { type: string, nullable: true }
+        costo: { type: number }
+        duracionDias: { type: integer, nullable: true }
+    Alerta:
+      type: object
+      properties:
+        id: { type: string, example: SANITARIA-14 }
+        tipo: { type: string, enum: [SANITARIA, STOCK, GDP] }
+        severidad: { type: string, enum: [alta, media] }
+        titulo: { type: string }
+        mensaje: { type: string }
+        loteId: { type: integer, nullable: true }
+
+paths:
+  /auth/login:
+    post:
+      tags: [Autenticación]
+      summary: Iniciar sesión (CU01)
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string, example: admin@ganadotrack.local }
+                password: { type: string, format: password }
+      responses:
+        '200':
+          description: Sesión iniciada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token: { type: string }
+                  usuario: { $ref: '#/components/schemas/Usuario' }
+        '401': { $ref: '#/components/responses/Error401' }
+  /auth/me:
+    get:
+      tags: [Autenticación]
+      summary: Usuario de la sesión actual
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/Usuario' } } } }
+        '401': { $ref: '#/components/responses/Error401' }
+
+  /usuarios:
+    get:
+      tags: [Usuarios]
+      summary: Listar usuarios (ADMIN)
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/Usuario' } } } } }
+        '403': { $ref: '#/components/responses/Error403' }
+    post:
+      tags: [Usuarios]
+      summary: Crear usuario (ADMIN, CU02)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [nombre, email, rol, password]
+              properties:
+                nombre: { type: string }
+                email: { type: string }
+                rol: { type: string, enum: [ADMIN, ENCARGADO, VETERINARIO] }
+                password: { type: string, minLength: 8 }
+      responses:
+        '201': { description: Creado, content: { application/json: { schema: { $ref: '#/components/schemas/Usuario' } } } }
+        '400': { $ref: '#/components/responses/Error400' }
+        '409': { $ref: '#/components/responses/Error409' }
+  /usuarios/{id}:
+    patch:
+      tags: [Usuarios]
+      summary: Modificar, desactivar o cambiar la contraseña de un usuario (ADMIN)
+      parameters: [{ $ref: '#/components/parameters/Id' }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nombre: { type: string }
+                rol: { type: string, enum: [ADMIN, ENCARGADO, VETERINARIO] }
+                activo: { type: boolean }
+                password: { type: string }
+      responses:
+        '200': { description: OK }
+        '400': { $ref: '#/components/responses/Error400' }
+
+  /lotes:
+    get:
+      tags: [Lotes]
+      summary: Listar lotes con indicadores (ADMIN)
+      parameters:
+        - { name: estado, in: query, schema: { type: string, enum: [ACTIVO, CERRADO] } }
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/Lote' } } } } }
+    post:
+      tags: [Lotes]
+      summary: Registrar lote (ADMIN, CU03)
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/LoteNuevo' } } } }
+      responses:
+        '201': { description: Creado, content: { application/json: { schema: { $ref: '#/components/schemas/Lote' } } } }
+        '400': { $ref: '#/components/responses/Error400' }
+        '409': { $ref: '#/components/responses/Error409' }
+  /lotes/{id}:
+    get:
+      tags: [Lotes]
+      summary: Detalle del lote con indicadores (ADMIN)
+      parameters: [{ $ref: '#/components/parameters/Id' }]
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/Lote' } } } }
+        '404': { $ref: '#/components/responses/Error404' }
+    patch:
+      tags: [Lotes]
+      summary: Editar lote activo / cargar precio de venta (ADMIN)
+      parameters: [{ $ref: '#/components/parameters/Id' }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nombre: { type: string }
+                pesoObjetivo: { type: number }
+                gdpObjetivo: { type: number }
+                precioVentaKg: { type: number, nullable: true }
+                observaciones: { type: string }
+      responses:
+        '200': { description: OK }
+        '409': { $ref: '#/components/responses/Error409' }
+  /lotes/{id}/cierre:
+    post:
+      tags: [Lotes]
+      summary: Cerrar lote por venta/faena (ADMIN, CU13)
+      description: Con `simular = true` devuelve el resumen financiero final sin cerrar el lote.
+      parameters: [{ $ref: '#/components/parameters/Id' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [fechaCierre, pesoFinal, precioVentaKg]
+              properties:
+                fechaCierre: { type: string, format: date }
+                pesoFinal: { type: number, example: 421 }
+                precioVentaKg: { type: number, example: 9500 }
+                simular: { type: boolean, default: false }
+      responses:
+        '200': { description: Lote cerrado (o simulación) con el resumen final }
+        '409': { $ref: '#/components/responses/Error409' }
+
+  /insumos:
+    get:
+      tags: [Insumos]
+      summary: Stock de insumos (ADMIN)
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/Insumo' } } } } }
+  /insumos/{id}:
+    patch:
+      tags: [Insumos]
+      summary: Configurar stock mínimo y/o precio por kg (ADMIN)
+      parameters: [{ $ref: '#/components/parameters/Id' }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                stockMinimoKg: { type: number }
+                precioKg: { type: number }
+      responses:
+        '200': { description: OK }
+  /insumos/{id}/compras:
+    get:
+      tags: [Insumos]
+      summary: Historial de compras del insumo (ADMIN)
+      parameters: [{ $ref: '#/components/parameters/Id' }]
+      responses:
+        '200': { description: OK }
+    post:
+      tags: [Insumos]
+      summary: Registrar compra o carga de insumo (ADMIN, CU06)
+      description: Suma la cantidad al stock y actualiza el precio/kg = precio total / cantidad.
+      parameters: [{ $ref: '#/components/parameters/Id' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [fecha, cantidadKg, precioTotal]
+              properties:
+                fecha: { type: string, format: date }
+                cantidadKg: { type: number, example: 5000 }
+                precioTotal: { type: number, example: 2250000 }
+      responses:
+        '201': { description: Compra registrada }
+        '400': { $ref: '#/components/responses/Error400' }
+
+  /alimentacion/opciones:
+    get:
+      tags: [Alimentación]
+      summary: Lotes activos e insumos para el formulario del encargado (ENCARGADO, ADMIN)
+      responses:
+        '200': { description: OK }
+  /alimentacion:
+    get:
+      tags: [Alimentación]
+      summary: Historial de alimentación (ADMIN)
+      parameters:
+        - { name: loteId, in: query, schema: { type: integer } }
+        - { name: desde, in: query, schema: { type: string, format: date } }
+        - { name: hasta, in: query, schema: { type: string, format: date } }
+      responses:
+        '200': { description: OK }
+    post:
+      tags: [Alimentación]
+      summary: Registrar alimentación diaria (ENCARGADO, ADMIN, CU04)
+      description: |
+        Guarda un registro por insumo, calcula el costo (kg × precio/kg) y descuenta el stock en una
+        transacción. Responde 409 si no hay stock suficiente o si ese insumo ya se cargó en la fecha.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [loteId, items]
+              properties:
+                loteId: { type: integer, example: 1 }
+                fecha: { type: string, format: date, description: Por defecto, hoy }
+                items:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      insumoId: { type: integer, example: 1 }
+                      kg: { type: number, example: 300 }
+      responses:
+        '201':
+          description: Registrado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  costoDia: { type: number }
+                  alertasStock: { type: array, items: { type: string } }
+        '400': { $ref: '#/components/responses/Error400' }
+        '409': { $ref: '#/components/responses/Error409' }
+  /alimentacion/{id}:
+    delete:
+      tags: [Alimentación]
+      summary: Eliminar un registro cargado por error y devolver el stock (ADMIN)
+      parameters: [{ $ref: '#/components/parameters/Id' }]
+      responses:
+        '200': { description: Eliminado }
+
+  /pesadas:
+    get:
+      tags: [Pesadas]
+      summary: Pesadas de un lote (ADMIN)
+      parameters:
+        - { name: loteId, in: query, required: true, schema: { type: integer } }
+      responses:
+        '200': { description: OK }
+    post:
+      tags: [Pesadas]
+      summary: Registrar pesada mensual (ADMIN, CU07)
+      description: Calcula GDP = (peso actual − peso anterior) / días y actualiza la proyección.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [loteId, fecha, pesoPromedio]
+              properties:
+                loteId: { type: integer }
+                fecha: { type: string, format: date }
+                pesoPromedio: { type: number, example: 395 }
+      responses:
+        '201': { description: Pesada registrada, con indicadores y avisos }
+        '400': { $ref: '#/components/responses/Error400' }
+
+  /sanidad/lotes:
+    get:
+      tags: [Sanidad]
+      summary: Lotes activos con cabezas actuales (VETERINARIO, ADMIN)
+      responses:
+        '200': { description: OK }
+  /sanidad/eventos:
+    get:
+      tags: [Sanidad]
+      summary: Calendario sanitario (VETERINARIO, ADMIN)
+      parameters:
+        - { name: loteId, in: query, schema: { type: integer } }
+        - { name: estado, in: query, schema: { type: string, enum: [PENDIENTE, REALIZADO] } }
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/EventoSanitario' } } } } }
+    post:
+      tags: [Sanidad]
+      summary: Programar evento sanitario (CU08)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [loteId, tipo, nombre, fechaProgramada]
+              properties:
+                loteId: { type: integer }
+                tipo: { type: string, enum: [VACUNA, ANTIPARASITARIO, GARRAPATA, OTRO] }
+                nombre: { type: string, example: Vacuna antiaftosa }
+                producto: { type: string }
+                fechaProgramada: { type: string, format: date }
+      responses:
+        '201': { description: Programado }
+  /sanidad/eventos/realizados:
+    post:
+      tags: [Sanidad]
+      summary: Registrar un evento no programado ya realizado (CU09)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [loteId, tipo, nombre, fechaRealizada]
+              properties:
+                loteId: { type: integer }
+                tipo: { type: string, enum: [VACUNA, ANTIPARASITARIO, GARRAPATA, OTRO] }
+                nombre: { type: string }
+                fechaRealizada: { type: string, format: date }
+                producto: { type: string }
+                dosis: { type: string }
+                costo: { type: number }
+                duracionDias: { type: integer, description: Obligatorio si tipo = GARRAPATA }
+      responses:
+        '201': { description: Registrado (si es garrapata, incluye proximoEvento) }
+  /sanidad/eventos/{id}/realizar:
+    post:
+      tags: [Sanidad]
+      summary: Registrar la ejecución de un evento programado (CU09)
+      parameters: [{ $ref: '#/components/parameters/Id' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [fechaRealizada]
+              properties:
+                fechaRealizada: { type: string, format: date }
+                producto: { type: string }
+                dosis: { type: string }
+                costo: { type: number, description: Si se omite se guarda en 0 con advertencia }
+                duracionDias: { type: integer }
+      responses:
+        '200': { description: Evento realizado }
+        '409': { $ref: '#/components/responses/Error409' }
+  /sanidad/eventos/{id}:
+    delete:
+      tags: [Sanidad]
+      summary: Eliminar un evento pendiente
+      parameters: [{ $ref: '#/components/parameters/Id' }]
+      responses:
+        '200': { description: Eliminado }
+        '409': { $ref: '#/components/responses/Error409' }
+  /sanidad/bajas:
+    get:
+      tags: [Sanidad]
+      summary: Bajas registradas
+      parameters:
+        - { name: loteId, in: query, schema: { type: integer } }
+      responses:
+        '200': { description: OK }
+    post:
+      tags: [Sanidad]
+      summary: Registrar baja de animales (CU10)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [loteId, fecha, cantidad, causa]
+              properties:
+                loteId: { type: integer }
+                fecha: { type: string, format: date }
+                cantidad: { type: integer, example: 2 }
+                causa: { type: string, enum: [ENFERMEDAD, ACCIDENTE, SEQUIA, OTRA] }
+                observaciones: { type: string }
+      responses:
+        '201': { description: Baja registrada }
+        '400': { $ref: '#/components/responses/Error400' }
+
+  /dashboard:
+    get:
+      tags: [Reportes]
+      summary: Dashboard principal (ADMIN, CU12)
+      responses:
+        '200': { description: Resumen, lotes activos con indicadores, alertas y stock }
+  /costos/{id}:
+    get:
+      tags: [Reportes]
+      summary: Costos y rentabilidad del lote (ADMIN, CU11)
+      parameters: [{ $ref: '#/components/parameters/Id' }]
+      responses:
+        '200': { description: Indicadores y desglose por insumo y por tipo de evento }
+  /alertas:
+    get:
+      tags: [Reportes]
+      summary: Alertas vigentes (CU14). El veterinario solo recibe las sanitarias
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/Alerta' } } } } }
+
+  /parametros:
+    get:
+      tags: [Parámetros]
+      summary: Parámetros del negocio (ADMIN)
+      responses:
+        '200': { description: OK }
+  /parametros/{clave}:
+    put:
+      tags: [Parámetros]
+      summary: Modificar un parámetro (ADMIN)
+      parameters:
+        - { name: clave, in: path, required: true, schema: { type: string, enum: [rendimiento_gancho, dias_aviso_sanitario] } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                valor: { type: number, example: 0.57 }
+      responses:
+        '200': { description: OK }
