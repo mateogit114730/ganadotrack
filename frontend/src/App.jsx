@@ -20,6 +20,7 @@ const CargarAlimentacion = lazy(() => import('./pages/encargado/CargarAlimentaci
 const Sanidad = lazy(() => import('./pages/veterinario/Sanidad.jsx'));
 const Perfil = lazy(() => import('./pages/Perfil.jsx'));
 const Raciones = lazy(() => import('./pages/veterinario/Raciones.jsx'));
+const Protocolos = lazy(() => import('./pages/veterinario/Protocolos.jsx'));
 
 function Inicio() {
   const { usuario } = useAuth();
@@ -49,6 +50,7 @@ export default function App() {
               <Route element={<RutaProtegida roles={['ADMIN', 'VETERINARIO']} />}>
                 <Route path="/sanidad" element={<Sanidad />} />
                 <Route path="/raciones" element={<Raciones />} />
+                <Route path="/protocolos" element={<Protocolos />} />
               </Route>
             </Route>
           </Route>

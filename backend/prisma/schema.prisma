@@ -229,3 +229,34 @@ model Parametro {
 
   @@map("parametro")
 }
+
+// Plan sanitario tipo: al crear un lote se generan sus eventos programados (RF10).
+model ProtocoloSanitario {
+  id          Int      @id @default(autoincrement())
+  nombre      String   @unique @db.VarChar(100)
+  descripcion String?  @db.VarChar(500)
+  porDefecto  Boolean  @default(false) @map("por_defecto")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  items ProtocoloItem[]
+
+  @@map("protocolo_sanitario")
+}
+
+// Evento del protocolo: se aplica "dia_desde_ingreso" días después del ingreso del lote y,
+// opcionalmente, se repite cada N días hasta completar "aplicaciones" en total.
+model ProtocoloItem {
+  id              Int        @id @default(autoincrement())
+  protocoloId     Int        @map("protocolo_id")
+  tipo            TipoEvento
+  nombre          String     @db.VarChar(100)
+  producto        String?    @db.VarChar(100)
+  diaDesdeIngreso Int        @map("dia_desde_ingreso")
+  repetirCadaDias Int?       @map("repetir_cada_dias")
+  aplicaciones    Int        @default(1)
+
+  protocolo ProtocoloSanitario @relation(fields: [protocoloId], references: [id], onDelete: Cascade)
+
+  @@index([protocoloId])
+  @@map("protocolo_item")
+}

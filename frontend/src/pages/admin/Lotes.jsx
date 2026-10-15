@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Button, Card, InputAdornment, Tab, Table, TableBody, TableCell, TableContainer, TableHead,
-  TableRow, Tabs, TextField,
+  Button, Card, Checkbox, FormControlLabel, InputAdornment, MenuItem, Tab, Table, TableBody, TableCell,
+  TableContainer, TableHead, TableRow, Tabs, TextField,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import PetsIcon from '@mui/icons-material/Pets';
@@ -10,6 +10,7 @@ import { api } from '../../api/cliente.js';
 import { useCarga } from '../../utils/useCarga.js';
 import { Cargando, ErrorCarga, Encabezado, Grilla, ChipEstado, EstadoVacio } from '../../components/Comunes.jsx';
 import DialogoFormulario from '../../components/DialogoFormulario.jsx';
+import { useAviso } from '../../components/Interaccion.jsx';
 import { fmtFecha, fmtGdp, fmtKg, fmtMoneda, hoyISO } from '../../utils/formato.js';
 
 const LOTE_VACIO = {
@@ -21,14 +22,25 @@ const kgAdorno = (texto = 'kg') => ({ input: { endAdornment: <InputAdornment pos
 /** CU03 – Registrar lote. */
 function DialogoNuevoLote({ abierto, onCerrar, onCreado }) {
   const [lote, setLote] = useState(LOTE_VACIO);
+  // 'defecto' = todavía no se eligió: se usa el protocolo marcado por defecto. '' = ninguno.
+  const [protocolo, setProtocolo] = useState('defecto');
+  const [omitirPasados, setOmitirPasados] = useState(true);
+  const { datos: protocolos } = useCarga(() => api.get('/protocolos').then((r) => r.data));
   const campo = (nombre) => ({
     value: lote[nombre],
     onChange: (e) => setLote({ ...lote, [nombre]: e.target.value }),
   });
+  const protocoloElegido = protocolo === 'defecto' ? (protocolos?.find((p) => p.porDefecto)?.id ?? '') : protocolo;
+  const ingresoPasado = lote.fechaIngreso < hoyISO();
 
   const guardar = async () => {
-    const { data } = await api.post('/lotes', lote);
+    const { data } = await api.post('/lotes', {
+      ...lote,
+      protocoloId: protocoloElegido === '' ? null : protocoloElegido,
+      omitirEventosPasados: omitirPasados,
+    });
     setLote(LOTE_VACIO);
+    setProtocolo('defecto');
     onCreado(data);
   };
 
@@ -49,6 +61,25 @@ function DialogoNuevoLote({ abierto, onCerrar, onCreado }) {
           slotProps={{ ...kgAdorno('kg/día'), htmlInput: { step: 0.01 } }}
         />
       </Grilla>
+      <TextField
+        select
+        label="Protocolo sanitario"
+        value={protocoloElegido}
+        onChange={(e) => setProtocolo(e.target.value)}
+        helperText="Genera automáticamente el calendario de vacunas y tratamientos del lote"
+        slotProps={{ select: { displayEmpty: true }, inputLabel: { shrink: true } }}
+      >
+        <MenuItem value="">Ninguno (cargar eventos a mano)</MenuItem>
+        {(protocolos ?? []).map((p) => (
+          <MenuItem key={p.id} value={p.id}>{p.nombre}{p.porDefecto ? ' (por defecto)' : ''}</MenuItem>
+        ))}
+      </TextField>
+      {ingresoPasado && protocoloElegido !== '' && (
+        <FormControlLabel
+          control={<Checkbox checked={omitirPasados} onChange={(e) => setOmitirPasados(e.target.checked)} />}
+          label="El lote ingresó antes de hoy: no programar los eventos con fecha ya pasada"
+        />
+      )}
       <TextField label="Observaciones" multiline minRows={2} {...campo('observaciones')} />
     </DialogoFormulario>
   );
@@ -56,6 +87,7 @@ function DialogoNuevoLote({ abierto, onCerrar, onCreado }) {
 
 export default function Lotes() {
   const navegar = useNavigate();
+  const avisar = useAviso();
   const [estado, setEstado] = useState('ACTIVO');
   const [dialogo, setDialogo] = useState(false);
   const { datos, cargando, error } = useCarga(
@@ -125,7 +157,10 @@ export default function Lotes() {
       <DialogoNuevoLote
         abierto={dialogo}
         onCerrar={() => setDialogo(false)}
-        onCreado={(lote) => navegar(`/lotes/${lote.id}`)}
+        onCreado={(lote) => {
+          avisar(lote.protocolo ? `Lote creado · ${lote.protocolo.eventosCreados} evento(s) sanitario(s) programado(s)` : 'Lote creado');
+          navegar(`/lotes/${lote.id}`);
+        }}
       />
     </>
   );
