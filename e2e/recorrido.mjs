@@ -111,6 +111,14 @@ const paso = (t) => console.log('✓', t);
   await page.getByRole('button', { name: 'Guardar' }).click();
   await page.getByText(/quedan 99 cabezas/).waitFor();
   paso('veterinario registró una baja');
+
+  await page.goto(`${BASE}/protocolos`);
+  await page.getByText('Protocolo feedlot estándar').waitFor();
+  await foto(page, '23-veterinario-protocolos');
+  await page.goto(`${BASE}/raciones`);
+  await page.getByText('Consumo total diario').waitFor();
+  await foto(page, '24-veterinario-raciones');
+  paso('veterinario consulta protocolos y raciones');
   await ctx.close();
 }
 
@@ -140,7 +148,8 @@ const paso = (t) => console.log('✓', t);
   await page.getByRole('button', { name: 'Crear lote' }).click();
   await page.waitForURL(/\/lotes\/\d+/);
   await page.getByText('Lote 04 - Prueba E2E').first().waitFor();
-  paso('admin creó un lote');
+  await page.getByText('sanitario(s) programado(s)', { exact: false }).waitFor();
+  paso('admin creó un lote con el protocolo sanitario por defecto');
 
   // Detalle de Lote 01
   await page.goto(`${BASE}/lotes`);

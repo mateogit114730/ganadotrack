@@ -2,6 +2,7 @@ import { prisma } from '../../config/prisma.js';
 import { AppError, conflicto, noEncontrado } from '../../utils/errores.js';
 import { hoy } from '../../utils/fechas.js';
 import { conIndicadores, loteConIndicadores } from '../../services/indicadores.js';
+import { aplicarProtocolo } from '../../services/protocolo.js';
 
 /** Busca un lote y valida que exista (y, opcionalmente, que esté activo). */
 export async function obtenerLote(id, { activo = false, db = prisma } = {}) {
@@ -25,12 +26,23 @@ export async function detalle(id) {
   return loteConIndicadores(await obtenerLote(id));
 }
 
-export async function crear(datos) {
+/**
+ * Alta de lote (CU03). Si se indica un protocolo sanitario, sus eventos se generan
+ * en la misma transacción: o se crea todo o no se crea nada (RF10).
+ */
+export async function crear({ protocoloId, omitirEventosPasados, ...datos }) {
   if (datos.fechaIngreso > hoy()) throw new AppError(400, 'La fecha de ingreso no puede ser futura');
   const existe = await prisma.lote.findUnique({ where: { nombre: datos.nombre } });
   if (existe) throw conflicto('Ya existe un lote con ese nombre');
-  const lote = await prisma.lote.create({ data: datos });
-  return loteConIndicadores(lote);
+
+  const { lote, protocolo } = await prisma.$transaction(async (tx) => {
+    const nuevo = await tx.lote.create({ data: datos });
+    const aplicado = protocoloId
+      ? await aplicarProtocolo(tx, nuevo, protocoloId, { omitirPasadas: omitirEventosPasados })
+      : null;
+    return { lote: nuevo, protocolo: aplicado };
+  });
+  return { ...(await loteConIndicadores(lote)), protocolo };
 }
 
 export async function actualizar(id, datos) {

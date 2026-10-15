@@ -17,6 +17,7 @@ if (!PASSWORD) throw new Error('Defina SEED_PASSWORD en el archivo .env');
 
 async function limpiar() {
   await prisma.racion.deleteMany();
+  await prisma.protocoloSanitario.deleteMany();
   await prisma.registroAlimentacion.deleteMany();
   await prisma.compraInsumo.deleteMany();
   await prisma.pesada.deleteMany();
@@ -126,6 +127,36 @@ async function main() {
       { clave: 'rendimiento_gancho', valor: '0.57', descripcion: 'Rendimiento al gancho (kg carne / kg vivo)' },
       { clave: 'dias_aviso_sanitario', valor: '7', descripcion: 'Días de anticipación de las alertas sanitarias' },
     ],
+  });
+
+  // ---------- Protocolos sanitarios (a validar con el veterinario de cabecera) ----------
+  await prisma.protocoloSanitario.create({
+    data: {
+      nombre: 'Protocolo feedlot estándar',
+      descripcion: 'Plan base de ingreso al corral. A validar con el veterinario de cabecera.',
+      porDefecto: true,
+      items: {
+        create: [
+          { tipo: 'VACUNA', nombre: 'Vacuna clostridial (mancha y gangrena)', producto: 'Clostridial polivalente', diaDesdeIngreso: 0 },
+          { tipo: 'ANTIPARASITARIO', nombre: 'Desparasitación interna', producto: 'Ivermectina 1%', diaDesdeIngreso: 0 },
+          { tipo: 'VACUNA', nombre: 'Vacuna respiratoria (IBR-DVB)', producto: 'Vacuna respiratoria polivalente', diaDesdeIngreso: 0 },
+          { tipo: 'VACUNA', nombre: 'Refuerzo clostridial', producto: 'Clostridial polivalente', diaDesdeIngreso: 21 },
+          { tipo: 'GARRAPATA', nombre: 'Control de garrapata', producto: 'Fluazurón pour-on', diaDesdeIngreso: 21, repetirCadaDias: 21, aplicaciones: 4 },
+        ],
+      },
+    },
+  });
+  await prisma.protocoloSanitario.create({
+    data: {
+      nombre: 'Protocolo mínimo',
+      descripcion: 'Solo vacunación clostridial con refuerzo.',
+      items: {
+        create: [
+          { tipo: 'VACUNA', nombre: 'Vacuna clostridial', producto: 'Clostridial polivalente', diaDesdeIngreso: 0 },
+          { tipo: 'VACUNA', nombre: 'Refuerzo clostridial', producto: 'Clostridial polivalente', diaDesdeIngreso: 21 },
+        ],
+      },
+    },
   });
 
   // ---------- Lote cerrado (historial) ----------

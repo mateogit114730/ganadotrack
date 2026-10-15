@@ -1,14 +1,16 @@
 import { useState } from 'react';
 import { Link as RouterLink, useParams } from 'react-router-dom';
 import {
-  Alert, AlertTitle, Box, Button, Card, CardContent, IconButton, InputAdornment, Stack, Tab,
-  Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Tabs, TextField, Typography,
+  Alert, AlertTitle, Box, Button, Card, CardContent, Checkbox, FormControlLabel, IconButton, InputAdornment,
+  MenuItem, Stack, Tab, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Tabs, TextField,
+  Typography,
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import MonitorWeightIcon from '@mui/icons-material/MonitorWeight';
 import EditIcon from '@mui/icons-material/Edit';
 import LockIcon from '@mui/icons-material/Lock';
 import DeleteIcon from '@mui/icons-material/DeleteOutline';
+import ChecklistIcon from '@mui/icons-material/ChecklistRtl';
 import {
   CartesianGrid, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis,
 } from 'recharts';
@@ -140,6 +142,30 @@ function DialogoCierre({ lote, abierto, onCerrar, onCerrado }) {
   );
 }
 
+/** RF10 – Generar el calendario de un protocolo en un lote ya cargado. */
+function DialogoAplicarProtocolo({ lote, onCerrar, onAplicado }) {
+  const { datos: protocolos } = useCarga(() => api.get('/protocolos').then((r) => r.data));
+  const [protocoloId, setProtocoloId] = useState('');
+  const [omitirPasadas, setOmitirPasadas] = useState(true);
+  const elegido = protocoloId || protocolos?.find((p) => p.porDefecto)?.id || '';
+  const aplicar = async () => {
+    const { data } = await api.post(`/lotes/${lote.id}/aplicar-protocolo`, { protocoloId: elegido, omitirPasadas });
+    onAplicado(data);
+  };
+  return (
+    <DialogoFormulario abierto titulo={`Aplicar protocolo – ${lote.nombre}`} onCerrar={onCerrar} onEnviar={aplicar} textoEnviar="Generar eventos">
+      <TextField select label="Protocolo" value={elegido} onChange={(e) => setProtocoloId(e.target.value)}>
+        {(protocolos ?? []).map((p) => <MenuItem key={p.id} value={p.id}>{p.nombre}</MenuItem>)}
+      </TextField>
+      <FormControlLabel
+        control={<Checkbox checked={omitirPasadas} onChange={(e) => setOmitirPasadas(e.target.checked)} />}
+        label="No programar los eventos con fecha ya pasada"
+      />
+      <Alert severity="info">Las fechas se calculan desde el ingreso del lote ({fmtFecha(lote.fechaIngreso)}).</Alert>
+    </DialogoFormulario>
+  );
+}
+
 /* ---------------------------- Pestañas ---------------------------- */
 
 function TabPesadas({ lote, pesadas, activo, onEliminar }) {
@@ -255,10 +281,11 @@ function TabAlimentacion({ registros, activo, onEliminar }) {
   );
 }
 
-function TabSanidad({ eventos, bajas, activo, onEliminarBaja }) {
+function TabSanidad({ eventos, bajas, activo, onEliminarBaja, onAplicarProtocolo }) {
   return (
     <Stack spacing={2}>
-      <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1, flexWrap: 'wrap' }}>
+        {activo && <Button startIcon={<ChecklistIcon />} onClick={onAplicarProtocolo}>Aplicar protocolo</Button>}
         <Button component={RouterLink} to="/sanidad">Ir al módulo de sanidad</Button>
       </Box>
       <Card>
@@ -503,7 +530,7 @@ export default function LoteDetalle() {
 
       {pestana === 'pesadas' && <TabPesadas lote={lote} pesadas={datos.pesadas} activo={activo} onEliminar={eliminarPesada} />}
       {pestana === 'alimentacion' && <TabAlimentacion registros={datos.alimentacion} activo={activo} onEliminar={eliminarRegistro} />}
-      {pestana === 'sanidad' && <TabSanidad eventos={datos.eventos} bajas={datos.bajas} activo={activo} onEliminarBaja={eliminarBaja} />}
+      {pestana === 'sanidad' && <TabSanidad eventos={datos.eventos} bajas={datos.bajas} activo={activo} onEliminarBaja={eliminarBaja} onAplicarProtocolo={() => setDialogo('protocolo')} />}
       {pestana === 'costos' && <TabCostos lote={lote} alimentacionPorInsumo={datos.alimentacionPorInsumo} sanidadPorTipo={datos.sanidadPorTipo} conversion={datos.conversion} />}
 
       {activo && (
@@ -511,6 +538,13 @@ export default function LoteDetalle() {
           <DialogoPesada lote={lote} abierto={dialogo === 'pesada'} onCerrar={cerrarDialogo} onGuardado={alGuardarPesada} />
           {dialogo === 'editar' && (
             <DialogoEditar lote={lote} abierto onCerrar={cerrarDialogo} onGuardado={() => { cerrarDialogo(); recargar(); }} />
+          )}
+          {dialogo === 'protocolo' && (
+            <DialogoAplicarProtocolo
+              lote={lote}
+              onCerrar={cerrarDialogo}
+              onAplicado={(r) => { cerrarDialogo(); avisar(`${r.protocolo}: ${r.eventosCreados} evento(s) programado(s)`); recargar(); }}
+            />
           )}
           {dialogo === 'cierre' && (
             <DialogoCierre

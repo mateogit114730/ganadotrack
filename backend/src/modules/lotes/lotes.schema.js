@@ -10,6 +10,9 @@ export const crearLoteSchema = z
     pesoObjetivo: positivo('El peso objetivo'),
     gdpObjetivo: positivo('La GDP objetivo'),
     observaciones: textoOpcional(500),
+    // Protocolo sanitario a aplicar al crear el lote (RF10). null = ninguno.
+    protocoloId: z.coerce.number().int().positive().nullable().optional(),
+    omitirEventosPasados: z.boolean().default(true),
   })
   .refine((d) => d.pesoObjetivo > d.pesoIngreso, {
     error: 'El peso objetivo debe ser mayor al peso de ingreso',
