@@ -1,0 +1,207 @@
+// Modelo de datos de GanadoTrack.
+// Convenciones: tablas y columnas en snake_case (vía @@map / @map), campos en camelCase en JS.
+// Unidades: pesos y cantidades en kg; importes en pesos argentinos (ARS).
+// Las restricciones CHECK y la vista v_resumen_lote se agregan en la migración "checks_y_vistas".
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Rol {
+  ADMIN
+  ENCARGADO
+  VETERINARIO
+}
+
+enum EstadoLote {
+  ACTIVO
+  CERRADO
+}
+
+enum TipoInsumo {
+  SUPLEMENTO
+  SILAJE
+}
+
+enum TipoEvento {
+  VACUNA
+  ANTIPARASITARIO
+  GARRAPATA
+  OTRO
+}
+
+enum EstadoEvento {
+  PENDIENTE
+  REALIZADO
+}
+
+enum CausaBaja {
+  ENFERMEDAD
+  ACCIDENTE
+  SEQUIA
+  OTRA
+}
+
+model Usuario {
+  id           Int      @id @default(autoincrement())
+  nombre       String   @db.VarChar(100)
+  email        String   @unique @db.VarChar(150)
+  passwordHash String   @map("password_hash") @db.VarChar(100)
+  rol          Rol
+  activo       Boolean  @default(true)
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  alimentaciones RegistroAlimentacion[]
+  compras        CompraInsumo[]
+  pesadas        Pesada[]
+  eventos        EventoSanitario[]
+  bajas          Baja[]
+
+  @@map("usuario")
+}
+
+model Lote {
+  id              Int        @id @default(autoincrement())
+  nombre          String     @unique @db.VarChar(60)
+  fechaIngreso    DateTime   @map("fecha_ingreso") @db.Date
+  cantidadInicial Int        @map("cantidad_inicial")
+  pesoIngreso     Decimal    @map("peso_ingreso") @db.Decimal(7, 2)
+  pesoObjetivo    Decimal    @map("peso_objetivo") @db.Decimal(7, 2)
+  gdpObjetivo     Decimal    @map("gdp_objetivo") @db.Decimal(5, 3)
+  precioVentaKg   Decimal?   @map("precio_venta_kg") @db.Decimal(12, 2)
+  estado          EstadoLote @default(ACTIVO)
+  fechaCierre     DateTime?  @map("fecha_cierre") @db.Date
+  pesoFinal       Decimal?   @map("peso_final") @db.Decimal(7, 2)
+  observaciones   String?    @db.VarChar(500)
+  createdAt       DateTime   @default(now()) @map("created_at")
+
+  alimentaciones RegistroAlimentacion[]
+  pesadas        Pesada[]
+  eventos        EventoSanitario[]
+  bajas          Baja[]
+
+  @@index([estado])
+  @@map("lote")
+}
+
+model Insumo {
+  id            Int        @id @default(autoincrement())
+  nombre        String     @unique @db.VarChar(80)
+  tipo          TipoInsumo
+  stockKg       Decimal    @default(0) @map("stock_kg") @db.Decimal(12, 2)
+  stockMinimoKg Decimal    @default(0) @map("stock_minimo_kg") @db.Decimal(12, 2)
+  precioKg      Decimal    @default(0) @map("precio_kg") @db.Decimal(12, 2)
+
+  compras        CompraInsumo[]
+  alimentaciones RegistroAlimentacion[]
+
+  @@map("insumo")
+}
+
+model CompraInsumo {
+  id          Int      @id @default(autoincrement())
+  insumoId    Int      @map("insumo_id")
+  fecha       DateTime @db.Date
+  cantidadKg  Decimal  @map("cantidad_kg") @db.Decimal(12, 2)
+  precioTotal Decimal  @map("precio_total") @db.Decimal(14, 2)
+  usuarioId   Int      @map("usuario_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  insumo  Insumo  @relation(fields: [insumoId], references: [id])
+  usuario Usuario @relation(fields: [usuarioId], references: [id])
+
+  @@index([insumoId, fecha])
+  @@map("compra_insumo")
+}
+
+model RegistroAlimentacion {
+  id        Int      @id @default(autoincrement())
+  loteId    Int      @map("lote_id")
+  insumoId  Int      @map("insumo_id")
+  fecha     DateTime @db.Date
+  kg        Decimal  @db.Decimal(10, 2)
+  precioKg  Decimal  @map("precio_kg") @db.Decimal(12, 2)
+  costo     Decimal  @db.Decimal(14, 2)
+  usuarioId Int      @map("usuario_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  lote    Lote    @relation(fields: [loteId], references: [id])
+  insumo  Insumo  @relation(fields: [insumoId], references: [id])
+  usuario Usuario @relation(fields: [usuarioId], references: [id])
+
+  // Un registro por insumo, por lote y por día.
+  @@unique([loteId, insumoId, fecha])
+  @@index([loteId, fecha])
+  @@map("registro_alimentacion")
+}
+
+model Pesada {
+  id           Int      @id @default(autoincrement())
+  loteId       Int      @map("lote_id")
+  fecha        DateTime @db.Date
+  pesoPromedio Decimal  @map("peso_promedio") @db.Decimal(7, 2)
+  gdp          Decimal  @db.Decimal(6, 3)
+  usuarioId    Int      @map("usuario_id")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  lote    Lote    @relation(fields: [loteId], references: [id])
+  usuario Usuario @relation(fields: [usuarioId], references: [id])
+
+  @@unique([loteId, fecha])
+  @@map("pesada")
+}
+
+model EventoSanitario {
+  id              Int          @id @default(autoincrement())
+  loteId          Int          @map("lote_id")
+  tipo            TipoEvento
+  nombre          String       @db.VarChar(100)
+  producto        String?      @db.VarChar(100)
+  fechaProgramada DateTime     @map("fecha_programada") @db.Date
+  estado          EstadoEvento @default(PENDIENTE)
+  fechaRealizada  DateTime?    @map("fecha_realizada") @db.Date
+  dosis           String?      @db.VarChar(60)
+  costo           Decimal      @default(0) @db.Decimal(14, 2)
+  duracionDias    Int?         @map("duracion_dias")
+  observaciones   String?      @db.VarChar(500)
+  usuarioId       Int?         @map("usuario_id")
+  createdAt       DateTime     @default(now()) @map("created_at")
+
+  lote    Lote     @relation(fields: [loteId], references: [id])
+  usuario Usuario? @relation(fields: [usuarioId], references: [id])
+
+  @@index([estado, fechaProgramada])
+  @@index([loteId])
+  @@map("evento_sanitario")
+}
+
+model Baja {
+  id            Int       @id @default(autoincrement())
+  loteId        Int       @map("lote_id")
+  fecha         DateTime  @db.Date
+  cantidad      Int
+  causa         CausaBaja
+  observaciones String?   @db.VarChar(500)
+  usuarioId     Int       @map("usuario_id")
+  createdAt     DateTime  @default(now()) @map("created_at")
+
+  lote    Lote    @relation(fields: [loteId], references: [id])
+  usuario Usuario @relation(fields: [usuarioId], references: [id])
+
+  @@index([loteId])
+  @@map("baja")
+}
+
+// Parámetros configurables del negocio (rendimiento al gancho, días de aviso sanitario).
+model Parametro {
+  clave       String  @id @db.VarChar(50)
+  valor       String  @db.VarChar(100)
+  descripcion String? @db.VarChar(200)
+
+  @@map("parametro")
+}
