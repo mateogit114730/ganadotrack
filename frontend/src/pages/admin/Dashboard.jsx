@@ -7,6 +7,7 @@ import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import VaccinesIcon from '@mui/icons-material/VaccinesOutlined';
 import InventoryIcon from '@mui/icons-material/Inventory2Outlined';
 import TrendingDownIcon from '@mui/icons-material/TrendingDown';
+import WbSunnyIcon from '@mui/icons-material/WbSunnyOutlined';
 import AddIcon from '@mui/icons-material/Add';
 import { api } from '../../api/cliente.js';
 import { useCarga } from '../../utils/useCarga.js';
@@ -15,6 +16,7 @@ import {
 } from '../../components/Comunes.jsx';
 import ListaAlertas from '../../components/ListaAlertas.jsx';
 import { PaisajeCampo } from '../../components/ilustraciones/index.jsx';
+import { PanelClima } from '../../components/Clima.jsx';
 import { COLORES } from '../../theme.js';
 import { fmtFecha, fmtGdp, fmtKg, fmtMoneda, fmtNumero, fmtToneladas } from '../../utils/formato.js';
 
@@ -22,6 +24,7 @@ const GRUPOS_ALERTA = [
   { tipos: ['SANITARIA'], titulo: 'Sanidad', icono: <VaccinesIcon fontSize="small" /> },
   { tipos: ['STOCK', 'STOCK_PROYECTADO'], titulo: 'Stock', icono: <InventoryIcon fontSize="small" /> },
   { tipos: ['GDP'], titulo: 'Ganancia de peso', icono: <TrendingDownIcon fontSize="small" /> },
+  { tipos: ['CLIMA'], titulo: 'Clima', icono: <WbSunnyIcon fontSize="small" /> },
 ];
 
 function TarjetaLote({ lote, onAbrir }) {
@@ -160,6 +163,7 @@ export default function Dashboard() {
         </Box>
 
         <Box>
+          <Box sx={{ mb: 3 }}><PanelClima /></Box>
           <Typography variant="h6" gutterBottom>Alertas ({alertas.length})</Typography>
           {alertas.length === 0 && <ListaAlertas alertas={[]} />}
           <Stack spacing={2}>

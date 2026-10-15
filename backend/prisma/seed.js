@@ -126,6 +126,10 @@ async function main() {
     data: [
       { clave: 'rendimiento_gancho', valor: '0.57', descripcion: 'Rendimiento al gancho (kg carne / kg vivo)' },
       { clave: 'dias_aviso_sanitario', valor: '7', descripcion: 'Días de anticipación de las alertas sanitarias' },
+      // Ubicación de demostración para el clima (configurable desde Configuración).
+      { clave: 'ubicacion_nombre', valor: 'Pergamino, Buenos Aires' },
+      { clave: 'ubicacion_latitud', valor: '-33.89101' },
+      { clave: 'ubicacion_longitud', valor: '-60.57462' },
     ],
   });
 

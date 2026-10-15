@@ -19,6 +19,7 @@ import { reportesRouter } from './modules/reportes/reportes.routes.js';
 import { parametrosRouter } from './modules/parametros/parametros.routes.js';
 import { racionRouter } from './modules/racion/racion.routes.js';
 import { protocolosRouter } from './modules/protocolos/protocolos.routes.js';
+import { climaRouter } from './modules/clima/clima.routes.js';
 
 export function crearApp() {
   const app = express();
@@ -55,6 +56,7 @@ export function crearApp() {
   app.use('/api/pesadas', pesadasRouter);
   app.use('/api/sanidad', sanidadRouter);
   app.use('/api/parametros', parametrosRouter);
+  app.use('/api/clima', climaRouter);
   app.use('/api', reportesRouter);
 
   app.use(rutaNoEncontrada);

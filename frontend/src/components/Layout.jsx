@@ -21,6 +21,7 @@ import { useAuth } from '../context/AuthContext.jsx';
 import { ETIQUETAS } from '../utils/formato.js';
 import { COLORES } from '../theme.js';
 import { FranjaPasto } from './ilustraciones/index.jsx';
+import { ChipClima } from './Clima.jsx';
 
 const ANCHO_MENU = 248;
 
@@ -145,6 +146,7 @@ export default function Layout() {
               {fechaLarga()}
             </Typography>
           </Box>
+          <ChipClima />
           <IconButton onClick={(e) => setMenuUsuario(e.currentTarget)} aria-label="Menú de usuario" sx={{ p: 0.5 }}>
             <Avatar sx={{ bgcolor: 'primary.main', width: 38, height: 38, fontSize: 15, fontWeight: 700 }}>
               {iniciales(usuario.nombre)}
