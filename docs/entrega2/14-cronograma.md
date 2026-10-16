@@ -17,7 +17,7 @@ Las versiones siguen la convención de la cátedra **W.X.Y.Z**: número impar pa
 | F1 – Rediseño y completitud | 16/10 – 19/10 | ✅ 15/10 | Estilo "Campo cálido", perfil, corrección de datos, página 404, ajustes de producción | `1.0.7.0` |
 | F2 – Gestión | 20/10 – 23/10 | ✅ 15/10 | Ración y carga en 1 toque, protocolos sanitarios, proyección de stock | `1.0.9.0` |
 | F3 – Tecnología | 24/10 – 27/10 | ✅ 15/10 | Clima y riesgos, reportes PDF/Excel, PWA con carga sin conexión | `1.1.0.0` |
-| F4 – Pruebas, despliegue y validación | 28/10 – 29/10 | 🟡 En curso | Cobertura ✅, CI en GitHub ✅, publicación online, envío al productor (29/10) | `1.1.1.0` (candidata, 15/10) |
+| F4 – Pruebas, despliegue y validación | 28/10 – 29/10 | 🟡 En curso | Cobertura ✅, CI en GitHub ✅, publicación online ✅ (15/10), prueba en celular ✅, envío al productor (29/10) | `1.1.1.0` (candidata, 15/10) |
 | F5 – Documentación y entregables | 30/10 – 03/11 | 🟡 En curso | Documentación actualizada, documento final Word/PDF, presentación | — |
 | F6 – Cierre | 04/11 | ⏳ | Ajustes por la validación, versión final y ensayo de la defensa | **`ganadotrack-1.1.1.1`** |
 | Entrega final | 05/11 | — | Documento + repositorio + aplicación + presentación | — |
@@ -42,10 +42,10 @@ Las versiones siguen la convención de la cátedra **W.X.Y.Z**: número impar pa
 | 24 | RF13 – Reportes PDF y Excel | F3 | 27/10 | ✅ Completada |
 | 25 | RF14 – App instalable y modo sin conexión | F3 | 27/10 | ✅ Completada |
 | 26 | Preparación de despliegue y validación | F4 | 29/10 | ✅ Completada |
-| 16 | Despliegue online | F4 | 29/10 | 🟡 Configuración lista; falta crear las cuentas |
+| 16 | Despliegue online | F4 | 29/10 | ✅ Publicado el 15/10 (Vercel + Render + Neon); prueba de humo y prueba en celular |
 | 14 | Validación con el productor | F4 | 29/10 – 02/11 | ⏳ Material listo; envío el 29/10 |
 | 15 | Documentación y manuales | F5 | 03/11 | 🟡 Actualizada con RF09–RF14 |
-| 28 | Capturas y diagramas finales | F5 | 26/10 | 🟡 Capturas regeneradas; faltan los diagramas en imagen |
+| 28 | Capturas y diagramas finales | F5 | 26/10 | ✅ Completada el 15/10 (28 capturas, 8 de GitHub y 9 diagramas) |
 | 27 | Documento final en Word y PDF | F5 | 31/10 | ⏳ Pendiente |
 | 17 | Presentación final | F5 | 02/11 | ⏳ Pendiente |
 | 29 | Versión final `ganadotrack-1.1.1.1` | F6 | 04/11 | ⏳ Pendiente |
@@ -76,13 +76,13 @@ gantt
   1.1.0.0                          :milestone, m3, 2026-10-15, 0d
 
   section F4 Despliegue y validación
-  Publicación online               :active, t16, 2026-10-16, 10d
+  Publicación online               :done, t16, 2026-10-15, 1d
   Envío al productor               :t14a, 2026-10-29, 1d
   Respuestas del productor         :t14b, 2026-10-30, 4d
 
   section F5 Documentación
-  Documentación actualizada        :active, t15, 2026-10-15, 10d
-  Capturas y diagramas             :t28, 2026-10-24, 3d
+  Documentación actualizada        :done, t15, 2026-10-15, 1d
+  Capturas y diagramas             :done, t28, 2026-10-15, 1d
   Documento final Word/PDF         :t27, 2026-10-27, 5d
   Presentación                     :t17, 2026-10-30, 4d
 

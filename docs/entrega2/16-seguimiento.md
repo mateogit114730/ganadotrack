@@ -182,6 +182,8 @@ Repositorio publicado el 15/10/2026: <https://github.com/mateogit114730/ganadotr
 | Ejecuciones de GitHub Actions en verde | <https://github.com/mateogit114730/ganadotrack/actions> | `capturas/github/actions.png` |
 | Tags de versión | <https://github.com/mateogit114730/ganadotrack/tags> | `capturas/github/tags.png` |
 | *Pull request* con la CI como control (PR #30) | <https://github.com/mateogit114730/ganadotrack/pull/30> | `capturas/github/pull-request.png` |
+| Issues cerrados, con su milestone y etiquetas | <https://github.com/mateogit114730/ganadotrack/issues?q=is%3Aissue+is%3Aclosed> | `capturas/github/issues-cerrados.png` |
+| Ejemplo de issue con criterios de aceptación y commit que lo resolvió (#21) | <https://github.com/mateogit114730/ganadotrack/issues/21> | `capturas/github/issue-ejemplo.png` |
 
 **Ejemplo de control de cambios (PR #30):**
 1. La primera ejecución de la CI en GitHub falló: el *lockfile* no era compatible con npm 10 y un script no pasaba el lint.

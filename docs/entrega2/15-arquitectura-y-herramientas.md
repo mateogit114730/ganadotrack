@@ -29,7 +29,7 @@ Se descartaron otras alternativas:
 ## 15.2 Diagrama de arquitectura
 
 ```mermaid
-flowchart LR
+flowchart TB
   subgraph Clientes["Dispositivos (navegador web)"]
     ADM["PC / tablet<br/>Administrador"]
     ENC["Celular<br/>Encargado"]
@@ -75,7 +75,7 @@ flowchart LR
   MOD -.-> ERR
 ```
 
-> Para la entrega en Word, la figura se genera como PNG con `docs/herramientas/render-diagramas.mjs` (Figura "Arquitectura de GanadoTrack").
+> Imagen para el Word: [`docs/diagramas/arquitectura.png`](../diagramas/arquitectura.png), generada con `e2e/render-diagramas.mjs` (Figura "Arquitectura de GanadoTrack").
 
 ## 15.3 Capas y componentes del backend
 
@@ -321,7 +321,7 @@ En total: **54 operaciones** sobre **41 rutas**, todas documentadas en OpenAPI.
 ### Integración de las herramientas en el proceso de desarrollo
 
 ```mermaid
-flowchart LR
+flowchart TB
   I["Issue en GitHub Projects<br/>(#n RF0x)"] --> B["Rama feature/n-…"]
   B --> C["Commits '#n - descripción'"]
   C --> PR["Pull request a develop"]

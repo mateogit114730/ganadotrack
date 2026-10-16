@@ -23,6 +23,7 @@ Las tres últimas entidades se agregaron en la versión final. Además, INSUMO i
 
 ```mermaid
 erDiagram
+  direction LR
   USUARIO ||--o{ REGISTRO_ALIMENTACION : "carga"
   USUARIO ||--o{ COMPRA_INSUMO : "registra"
   USUARIO ||--o{ PESADA : "registra"
@@ -154,7 +155,9 @@ erDiagram
 
 > PROTOCOLO_SANITARIO no tiene una relación con LOTE ni con EVENTO_SANITARIO. Al aplicarlo, el sistema **copia** sus ítems como eventos pendientes del lote. Así, si el veterinario modifica el protocolo después, los calendarios ya generados no cambian, y cada evento se puede reprogramar en forma individual.
 
-> Para la entrega en Word: pegar en <https://mermaid.live> y exportar como PNG (reemplaza la figura del ER de la 1ª entrega).
+> Imágenes para el Word, generadas con `e2e/render-diagramas.mjs`:
+> - [`docs/diagramas/der-resumido.png`](../diagramas/der-resumido.png): entidades y relaciones de negocio. Es la figura del cuerpo del documento y reemplaza la del ER de la 1ª entrega. No muestra la relación de auditoría de USUARIO con cada registro (ver Cardinalidades).
+> - [`docs/diagramas/der.png`](../diagramas/der.png): el diagrama completo, con todos los campos, para el anexo.
 
 ### Cardinalidades
 

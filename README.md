@@ -82,6 +82,8 @@ npm run dev                   # aplicación en http://localhost:5173
 | `npm run db:migrate` | `backend/` | Crea una nueva migración tras cambiar `schema.prisma` |
 | `npm run recorrido` | `e2e/` | Recorrido E2E con los 3 roles en Microsoft Edge (requiere `SEED_PASSWORD`; genera las capturas) |
 | `node offline.mjs <carpeta>` | `e2e/` | Prueba E2E del modo sin conexión contra `npm run preview` |
+| `node render-diagramas.mjs` | `e2e/` | Convierte a PNG los diagramas de la documentación (`docs/diagramas/`) |
+| `node capturas-github.mjs` | `e2e/` | Capturas del tablero, milestones, Actions y tags para la sección 16 |
 | `npm run humo` | `e2e/` | Prueba de humo de **solo lectura** contra la app publicada (contraseña en `e2e/.password-produccion`) |
 
 Documentación interactiva de la API: <http://localhost:4000/api/docs> (Swagger UI).

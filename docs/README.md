@@ -20,7 +20,9 @@ Contenido para el documento de entrega (Word). Cada archivo corresponde a una se
 | Anexo: Manual de usuario | [entrega2/manual-usuario.md](entrega2/manual-usuario.md) | Nuevo anexo, con las capturas de `capturas/` |
 | Anexo: Acta de validación | [entregas/validacion-productor.md](entregas/validacion-productor.md) | Nuevo anexo, con las respuestas del productor |
 
-**Diagramas:** los bloques ```mermaid``` y el de PlantUML se convierten en imagen con `herramientas/render-diagramas.mjs` (o manualmente en <https://mermaid.live> y <https://www.plantuml.com/plantuml>).
+**Diagramas:** `diagramas/` contiene los 10 diagramas en PNG, generados con `node render-diagramas.mjs` (en `e2e/`) a partir de los bloques ```mermaid``` y PlantUML de la documentación, con los colores del sistema. Si se modifica un diagrama en el Markdown, volver a ejecutar el script.
+
+**Capturas de GitHub:** `capturas/github/` (tablero, milestones, issues, commits, Actions, tags y *pull request*), generadas con `node capturas-github.mjs` (en `e2e/`).
 
 **Capturas:** `capturas/` contiene las pantallas del sistema, generadas automáticamente por los recorridos E2E (`e2e/recorrido.mjs` y `e2e/offline.mjs`).
 
