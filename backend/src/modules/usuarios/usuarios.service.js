@@ -1,10 +1,7 @@
 import bcrypt from 'bcryptjs';
 import { prisma } from '../../config/prisma.js';
 import { AppError, conflicto, noEncontrado } from '../../utils/errores.js';
-import { datosPublicos } from '../auth/auth.service.js';
-
-// Costo del hash bcrypt (RNF04). 10 rondas ≈ 70 ms por hash.
-const RONDAS_BCRYPT = 10;
+import { datosPublicos, RONDAS_BCRYPT } from '../auth/auth.service.js';
 
 export async function listar() {
   const usuarios = await prisma.usuario.findMany({ orderBy: [{ activo: 'desc' }, { nombre: 'asc' }] });

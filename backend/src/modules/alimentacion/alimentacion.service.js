@@ -3,17 +3,18 @@ import { AppError, conflicto, noEncontrado } from '../../utils/errores.js';
 import { hoy } from '../../utils/fechas.js';
 import { costoAlimentacion, redondear } from '../../services/calculos.js';
 import { obtenerLote } from '../lotes/lotes.service.js';
+import { cabezasPorLote, racionesVigentes, conKgDelDia } from '../../services/raciones.js';
 
 /**
- * Datos para el formulario del encargado: lotes activos, insumos y qué insumos
- * ya se cargaron hoy en cada lote.
+ * Datos para el formulario del encargado: lotes activos con sus cabezas, la ración
+ * sugerida para hoy (kg por cabeza × cabezas), los insumos y lo ya cargado hoy.
  */
 export async function opciones() {
   const fechaHoy = hoy();
   const [lotes, insumos, registrosHoy] = await Promise.all([
     prisma.lote.findMany({
       where: { estado: 'ACTIVO' },
-      select: { id: true, nombre: true },
+      select: { id: true, nombre: true, cantidadInicial: true },
       orderBy: { nombre: 'asc' },
     }),
     prisma.insumo.findMany({
@@ -26,11 +27,18 @@ export async function opciones() {
     }),
   ]);
 
+  const [cabezas, raciones] = await Promise.all([
+    cabezasPorLote(lotes),
+    racionesVigentes(lotes.map((l) => l.id), fechaHoy),
+  ]);
+
   return {
     fecha: fechaHoy,
     insumos,
-    lotes: lotes.map((l) => ({
+    lotes: lotes.map(({ cantidadInicial: _cantidad, ...l }) => ({
       ...l,
+      cabezasActuales: cabezas.get(l.id),
+      racionSugerida: conKgDelDia(raciones.get(l.id), cabezas.get(l.id)),
       cargadoHoy: registrosHoy.filter((r) => r.loteId === l.id),
     })),
   };
@@ -41,9 +49,27 @@ export async function opciones() {
  * Todo ocurre en una transacción: si un insumo no tiene stock suficiente
  * o ya se cargó ese día, no se guarda nada.
  */
-export async function registrar({ loteId, fecha = hoy(), items }, usuarioId) {
+export async function registrar({ loteId, fecha = hoy(), items, operacionId }, usuarioId) {
   if (fecha > hoy()) throw new AppError(400, 'La fecha no puede ser futura');
   const itemsConKg = items.filter((i) => i.kg > 0);
+
+  // Reintento de una operación ya registrada (sincronización offline): se devuelve lo guardado.
+  if (operacionId) {
+    const previos = await prisma.registroAlimentacion.findMany({
+      where: { operacionId },
+      include: { insumo: { select: { nombre: true, tipo: true } }, lote: { select: { id: true, nombre: true } } },
+    });
+    if (previos.length) {
+      return {
+        lote: previos[0].lote,
+        fecha: previos[0].fecha,
+        registros: previos.map(({ lote: _lote, ...r }) => r),
+        costoDia: redondear(previos.reduce((t, r) => t + Number(r.costo), 0), 2),
+        alertasStock: [],
+        repetido: true,
+      };
+    }
+  }
 
   return prisma.$transaction(async (tx) => {
     const lote = await obtenerLote(loteId, { activo: true, db: tx });
@@ -77,7 +103,7 @@ export async function registrar({ loteId, fecha = hoy(), items }, usuarioId) {
       const precioKg = Number(insumo.precioKg);
       registros.push(
         await tx.registroAlimentacion.create({
-          data: { loteId, insumoId, fecha, kg, precioKg, costo: costoAlimentacion(kg, precioKg), usuarioId },
+          data: { loteId, insumoId, fecha, kg, precioKg, costo: costoAlimentacion(kg, precioKg), usuarioId, operacionId },
           include: { insumo: { select: { nombre: true, tipo: true } } },
         }),
       );

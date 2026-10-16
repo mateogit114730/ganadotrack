@@ -77,3 +77,50 @@ export function margenBruto(precioVentaKg, kgCarne, costoTotal) {
   if (precioVentaKg === null || precioVentaKg === undefined) return null;
   return redondear(precioVentaKg * kgCarne - costoTotal, 2);
 }
+
+/** Kg de alimento sugeridos para el día = kg por cabeza por día (ración) × cabezas actuales. */
+export function kgSugeridos(kgCabezaDia, cabezas) {
+  return Math.round(kgCabezaDia * cabezas);
+}
+
+/** Kg de materia seca de un alimento = kg tal cual × % de materia seca / 100. */
+export function kgMateriaSeca(kg, materiaSecaPct) {
+  return redondear((kg * materiaSecaPct) / 100, 2);
+}
+
+/**
+ * Conversión alimenticia (kg de materia seca consumidos por kg de peso vivo ganado).
+ * CA = kg MS consumidos en el período / (aumento de peso promedio × cabezas).
+ * Cuanto menor, más eficiente el engorde. Devuelve null si el lote no ganó peso.
+ */
+export function conversionAlimenticia(kgMsConsumidos, aumentoPesoPromedio, cabezas) {
+  const kgGanados = aumentoPesoPromedio * cabezas;
+  if (!(kgGanados > 0)) return null;
+  return redondear(kgMsConsumidos / kgGanados, 2);
+}
+
+/**
+ * Días que alcanza el stock de un insumo al ritmo de consumo diario (redondeado hacia abajo:
+ * si alcanza para 6,8 días, el día 7 ya falta). Devuelve null si no hay consumo previsto.
+ */
+export function diasDeCobertura(stockKg, consumoDiarioKg) {
+  if (!(consumoDiarioKg > 0)) return null;
+  return Math.floor(stockKg / consumoDiarioKg);
+}
+
+/**
+ * Compra sugerida para cubrir el consumo de los próximos "horizonteDias" y terminar con el
+ * stock mínimo: consumo × horizonte + mínimo − stock actual, redondeada a múltiplos de 100 kg.
+ */
+export function compraSugerida(stockKg, consumoDiarioKg, horizonteDias, stockMinimoKg = 0) {
+  const faltante = consumoDiarioKg * horizonteDias + stockMinimoKg - stockKg;
+  return faltante > 0 ? Math.ceil(faltante / 100) * 100 : 0;
+}
+
+/** Stock proyectado día por día (nunca negativo), para graficar la curva de consumo. */
+export function stockProyectado(stockKg, consumoDiarioKg, dias) {
+  return Array.from({ length: dias + 1 }, (_, d) => ({
+    dia: d,
+    kg: Math.max(0, redondear(stockKg - consumoDiarioKg * d, 0)),
+  }));
+}

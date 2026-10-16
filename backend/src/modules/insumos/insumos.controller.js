@@ -15,3 +15,8 @@ export async function registrarCompra(req, res) {
 export async function listarCompras(req, res) {
   res.json(await servicio.listarCompras(req.datosParams.id));
 }
+
+export async function editarCompra(req, res) {
+  const { id, compraId } = req.datosParams;
+  res.json(await servicio.editarCompra(id, compraId, req.body));
+}

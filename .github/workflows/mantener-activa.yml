@@ -1,0 +1,16 @@
+# El plan gratuito de Render "duerme" la API tras 15 minutos sin uso y la primera petición
+# tarda ~50 s en despertarla. Este flujo la consulta cada 14 minutos en horario de uso
+# (lunes a viernes, 8 a 22 h de Argentina). Se puede desactivar desde la pestaña Actions.
+name: Mantener la API activa
+
+on:
+  schedule:
+    - cron: '*/14 11-23,0-1 * * 1-5'
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    if: vars.API_URL != ''
+    steps:
+      - run: curl --silent --show-error --max-time 90 "${{ vars.API_URL }}/api/health"

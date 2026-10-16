@@ -2,15 +2,20 @@ import { prisma } from '../../config/prisma.js';
 import { AppError, noEncontrado } from '../../utils/errores.js';
 import { hoy } from '../../utils/fechas.js';
 import { redondear } from '../../services/calculos.js';
+import { proyeccionInsumos } from '../../services/proyeccionStock.js';
 
 const conEstado = (insumo) => ({
   ...insumo,
   bajoMinimo: Number(insumo.stockKg) < Number(insumo.stockMinimoKg),
 });
 
+/** Insumos con su estado de stock y la proyección de consumo (RF11). */
 export async function listar() {
-  const insumos = await prisma.insumo.findMany({ orderBy: { nombre: 'asc' } });
-  return insumos.map(conEstado);
+  const [insumos, proyeccion] = await Promise.all([
+    prisma.insumo.findMany({ orderBy: { nombre: 'asc' } }),
+    proyeccionInsumos(),
+  ]);
+  return insumos.map((i) => ({ ...conEstado(i), proyeccion: proyeccion.get(i.id) }));
 }
 
 export async function actualizar(id, datos) {
@@ -42,6 +47,46 @@ export async function registrarCompra(insumoId, { fecha, cantidadKg, precioTotal
       },
     });
     return { compra, insumo: conEstado(actualizado) };
+  });
+}
+
+/**
+ * Corrige una compra cargada con error. El stock se ajusta por la diferencia de cantidad
+ * (sin quedar negativo) y, si es la compra más reciente, también el precio vigente.
+ */
+export async function editarCompra(insumoId, compraId, { fecha, cantidadKg, precioTotal }) {
+  if (fecha > hoy()) throw new AppError(400, 'La fecha de compra no puede ser futura');
+
+  return prisma.$transaction(async (tx) => {
+    const compra = await tx.compraInsumo.findUnique({ where: { id: compraId } });
+    if (!compra || compra.insumoId !== insumoId) throw noEncontrado('Compra');
+
+    const diferencia = cantidadKg - Number(compra.cantidadKg);
+    if (diferencia < 0) {
+      const { count } = await tx.insumo.updateMany({
+        where: { id: insumoId, stockKg: { gte: -diferencia } },
+        data: { stockKg: { decrement: -diferencia } },
+      });
+      if (count === 0) {
+        throw new AppError(409, 'No se puede reducir la compra: parte de ese insumo ya se consumió');
+      }
+    } else if (diferencia > 0) {
+      await tx.insumo.update({ where: { id: insumoId }, data: { stockKg: { increment: diferencia } } });
+    }
+
+    const actualizada = await tx.compraInsumo.update({
+      where: { id: compraId },
+      data: { fecha, cantidadKg, precioTotal },
+    });
+    const ultima = await tx.compraInsumo.findFirst({
+      where: { insumoId },
+      orderBy: [{ fecha: 'desc' }, { id: 'desc' }],
+    });
+    if (ultima.id === compraId) {
+      await tx.insumo.update({ where: { id: insumoId }, data: { precioKg: redondear(precioTotal / cantidadKg, 2) } });
+    }
+    const insumo = await tx.insumo.findUnique({ where: { id: insumoId } });
+    return { compra: actualizada, insumo: conEstado(insumo) };
   });
 }
 

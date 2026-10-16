@@ -1,0 +1,30 @@
+# Blueprint de Render para la API de GanadoTrack.
+# En Render: New → Blueprint → elegir este repositorio. Los valores marcados "sync: false"
+# se cargan a mano en el panel (no se guardan secretos en el repositorio).
+services:
+  - type: web
+    name: ganadotrack-api
+    runtime: node
+    plan: free
+    region: virginia # misma región que la base de Neon (AWS us-east-1)
+    rootDir: backend
+    # Se incluyen las dependencias de desarrollo porque el CLI de Prisma aplica las migraciones.
+    buildCommand: npm ci --include=dev && npx prisma migrate deploy
+    startCommand: npm start
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: "24"
+      - key: NODE_ENV
+        value: production
+      - key: JWT_EXPIRES_IN
+        value: 8h
+      - key: JWT_SECRET
+        generateValue: true
+      - key: DATABASE_URL
+        sync: false # cadena de conexión de Neon
+      - key: CORS_ORIGIN
+        sync: false # URL del frontend en Vercel, por ejemplo https://ganadotrack.vercel.app
+      - key: SEED_PASSWORD
+        sync: false # contraseña de los usuarios de demostración

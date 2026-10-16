@@ -4,8 +4,10 @@ import { fecha, noNegativo } from '../../utils/validaciones.js';
 export const registrarAlimentacionSchema = z
   .object({
     loteId: z.coerce.number().int().positive({ error: 'Seleccione un lote' }),
-    // Si no se envía, se usa la fecha de hoy.
+    // Si no se envía, se usa la fecha de hoy. En cargas hechas sin conexión es la fecha de captura.
     fecha: fecha.optional(),
+    // Identificador del envío (UUID generado en el dispositivo) para reintentos sin duplicar.
+    operacionId: z.uuid({ error: 'Identificador de operación inválido' }).optional(),
     items: z
       .array(
         z.object({

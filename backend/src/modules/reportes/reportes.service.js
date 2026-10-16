@@ -3,12 +3,15 @@ import { conIndicadores, loteConIndicadores } from '../../services/indicadores.j
 import { generarAlertas } from '../../services/alertas.js';
 import { redondear } from '../../services/calculos.js';
 import { obtenerLote } from '../lotes/lotes.service.js';
+import { conversionDeLote } from '../../services/conversion.js';
+import { proyeccionInsumos } from '../../services/proyeccionStock.js';
 
 /** Costos y rentabilidad de un lote con el desglose por insumo y por tipo de evento (CU11). */
 export async function costosLote(loteId) {
-  const lote = await loteConIndicadores(await obtenerLote(loteId));
+  const loteBase = await obtenerLote(loteId);
+  const lote = await loteConIndicadores(loteBase);
 
-  const [porInsumo, porTipoSanitario, insumos] = await Promise.all([
+  const [porInsumo, porTipoSanitario, insumos, conversion] = await Promise.all([
     prisma.registroAlimentacion.groupBy({
       by: ['insumoId'],
       where: { loteId },
@@ -21,12 +24,14 @@ export async function costosLote(loteId) {
       _count: { _all: true },
     }),
     prisma.insumo.findMany({ select: { id: true, nombre: true } }),
+    conversionDeLote(loteBase),
   ]);
 
   const nombreInsumo = new Map(insumos.map((i) => [i.id, i.nombre]));
 
   return {
     lote,
+    conversion: { acumulada: conversion.acumulada, kgMsTotal: conversion.kgMsTotal },
     alimentacionPorInsumo: porInsumo.map((g) => ({
       insumoId: g.insumoId,
       insumo: nombreInsumo.get(g.insumoId),
@@ -43,13 +48,20 @@ export async function costosLote(loteId) {
 
 /** Datos del dashboard principal (CU12, RF07). */
 export async function dashboard() {
-  const [lotesActivos, alertas, insumos] = await Promise.all([
-    prisma.lote.findMany({ where: { estado: 'ACTIVO' }, orderBy: { fechaIngreso: 'asc' } }),
+  const [lotesActivos, alertas, insumos, proyeccion] = await Promise.all([
+    prisma.lote.findMany({
+      where: { estado: 'ACTIVO' },
+      orderBy: { fechaIngreso: 'asc' },
+      include: { pesadas: { select: { pesoPromedio: true }, orderBy: { fecha: 'asc' } } },
+    }),
     generarAlertas('ADMIN'),
     prisma.insumo.findMany({ orderBy: { nombre: 'asc' } }),
+    proyeccionInsumos(),
   ]);
-  const lotes = (await conIndicadores(lotesActivos)).map((l) => ({
+  const lotes = (await conIndicadores(lotesActivos)).map(({ pesadas, ...l }) => ({
     ...l,
+    // Evolución del peso promedio (ingreso + pesadas) para el mini gráfico del dashboard.
+    seriePeso: [Number(l.pesoIngreso), ...pesadas.map((p) => Number(p.pesoPromedio))],
     alertas: alertas.filter((a) => a.loteId === l.id).length,
   }));
 
@@ -75,6 +87,9 @@ export async function dashboard() {
       stockKg: Number(i.stockKg),
       stockMinimoKg: Number(i.stockMinimoKg),
       bajoMinimo: Number(i.stockKg) < Number(i.stockMinimoKg),
+      diasCobertura: proyeccion.get(i.id).diasCobertura,
+      fechaQuiebre: proyeccion.get(i.id).fechaQuiebre,
+      coberturaBaja: proyeccion.get(i.id).coberturaBaja,
     })),
   };
 }

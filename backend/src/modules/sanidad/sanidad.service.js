@@ -131,6 +131,18 @@ export async function registrarNoProgramado({ loteId, tipo, nombre, ...datos }, 
   });
 }
 
+/** Modifica un evento todavía pendiente (por ejemplo, para reprogramarlo). */
+export async function editarPendiente(id, datos) {
+  const evento = await prisma.eventoSanitario.findUnique({ where: { id } });
+  if (!evento) throw noEncontrado('Evento sanitario');
+  if (evento.estado !== 'PENDIENTE') throw conflicto('Solo se pueden modificar eventos pendientes');
+  const lote = await obtenerLote(evento.loteId, { activo: true });
+  if (datos.fechaProgramada && datos.fechaProgramada < lote.fechaIngreso) {
+    throw new AppError(400, 'La fecha programada es anterior al ingreso del lote');
+  }
+  return prisma.eventoSanitario.update({ where: { id }, data: datos, include: incluirLote });
+}
+
 /** Elimina un evento pendiente cargado por error. Los realizados no se eliminan. */
 export async function eliminarPendiente(id) {
   const evento = await prisma.eventoSanitario.findUnique({ where: { id } });
@@ -160,6 +172,15 @@ export async function registrarBaja({ loteId, fecha, cantidad, causa, observacio
     });
     return { baja, cabezasActuales: cabezas - cantidad };
   });
+}
+
+/** Elimina una baja cargada por error: las cabezas del lote vuelven a sumarse. */
+export async function eliminarBaja(id) {
+  const baja = await prisma.baja.findUnique({ where: { id } });
+  if (!baja) throw noEncontrado('Baja');
+  await obtenerLote(baja.loteId, { activo: true });
+  await prisma.baja.delete({ where: { id } });
+  return { eliminado: true };
 }
 
 export async function listarBajas({ loteId } = {}) {

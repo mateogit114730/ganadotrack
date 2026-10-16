@@ -13,6 +13,8 @@ export const PASSWORD = 'Prueba1234!';
 export const fechaRelativa = (dias) => formatoISO(sumarDias(hoy(), dias));
 
 export async function limpiarBase() {
+  await prisma.racion.deleteMany();
+  await prisma.protocoloSanitario.deleteMany();
   await prisma.registroAlimentacion.deleteMany();
   await prisma.compraInsumo.deleteMany();
   await prisma.pesada.deleteMany();

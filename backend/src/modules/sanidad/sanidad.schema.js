@@ -24,6 +24,16 @@ export const programarEventoSchema = z.object({
   observaciones: textoOpcional(500),
 });
 
+export const editarEventoSchema = z
+  .object({
+    tipo: tipo.optional(),
+    nombre: nombre.optional(),
+    producto: textoOpcional(100),
+    fechaProgramada: fecha.optional(),
+    observaciones: textoOpcional(500),
+  })
+  .refine((d) => Object.values(d).some((v) => v !== undefined), { error: 'No hay datos para actualizar' });
+
 export const realizarEventoSchema = z.object(datosEjecucion);
 
 export const eventoNoProgramadoSchema = z.object({ loteId, tipo, nombre, ...datosEjecucion });

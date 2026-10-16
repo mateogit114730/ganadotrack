@@ -16,6 +16,8 @@ const PASSWORD = process.env.SEED_PASSWORD;
 if (!PASSWORD) throw new Error('Defina SEED_PASSWORD en el archivo .env');
 
 async function limpiar() {
+  await prisma.racion.deleteMany();
+  await prisma.protocoloSanitario.deleteMany();
   await prisma.registroAlimentacion.deleteMany();
   await prisma.compraInsumo.deleteMany();
   await prisma.pesada.deleteMany();
@@ -48,6 +50,7 @@ async function crearInsumos(admin) {
       precioKg: 480,
       stockKg: 1500, // por debajo del mínimo: genera alerta de stock en la demo
       stockMinimoKg: 2000,
+      materiaSecaPct: 90,
     },
   });
   const silaje = await prisma.insumo.create({
@@ -57,6 +60,7 @@ async function crearInsumos(admin) {
       precioKg: 45,
       stockKg: 180000,
       stockMinimoKg: 40000,
+      materiaSecaPct: 35,
     },
   });
 
@@ -93,6 +97,16 @@ async function cargarAlimentacion(lote, { suplemento, silaje }, racion, hasta, u
   await prisma.registroAlimentacion.createMany({ data: registros });
 }
 
+/** Ración vigente desde el ingreso del lote (kg por cabeza por día), definida por el veterinario. */
+async function cargarRacion(lote, { suplemento, silaje }, usuarioId) {
+  await prisma.racion.createMany({
+    data: [
+      { loteId: lote.id, insumoId: suplemento.id, kgCabezaDia: 1.5, vigenteDesde: lote.fechaIngreso, usuarioId },
+      { loteId: lote.id, insumoId: silaje.id, kgCabezaDia: 15, vigenteDesde: lote.fechaIngreso, usuarioId },
+    ],
+  });
+}
+
 /** Pesadas con la GDP calculada igual que en la API. */
 async function cargarPesadas(lote, pesadas, usuarioId) {
   let anterior = { fecha: lote.fechaIngreso, peso: Number(lote.pesoIngreso) };
@@ -112,7 +126,41 @@ async function main() {
     data: [
       { clave: 'rendimiento_gancho', valor: '0.57', descripcion: 'Rendimiento al gancho (kg carne / kg vivo)' },
       { clave: 'dias_aviso_sanitario', valor: '7', descripcion: 'Días de anticipación de las alertas sanitarias' },
+      // Ubicación de demostración para el clima (configurable desde Configuración).
+      { clave: 'ubicacion_nombre', valor: 'Pergamino, Buenos Aires' },
+      { clave: 'ubicacion_latitud', valor: '-33.89101' },
+      { clave: 'ubicacion_longitud', valor: '-60.57462' },
     ],
+  });
+
+  // ---------- Protocolos sanitarios (a validar con el veterinario de cabecera) ----------
+  await prisma.protocoloSanitario.create({
+    data: {
+      nombre: 'Protocolo feedlot estándar',
+      descripcion: 'Plan base de ingreso al corral. A validar con el veterinario de cabecera.',
+      porDefecto: true,
+      items: {
+        create: [
+          { tipo: 'VACUNA', nombre: 'Vacuna clostridial (mancha y gangrena)', producto: 'Clostridial polivalente', diaDesdeIngreso: 0 },
+          { tipo: 'ANTIPARASITARIO', nombre: 'Desparasitación interna', producto: 'Ivermectina 1%', diaDesdeIngreso: 0 },
+          { tipo: 'VACUNA', nombre: 'Vacuna respiratoria (IBR-DVB)', producto: 'Vacuna respiratoria polivalente', diaDesdeIngreso: 0 },
+          { tipo: 'VACUNA', nombre: 'Refuerzo clostridial', producto: 'Clostridial polivalente', diaDesdeIngreso: 21 },
+          { tipo: 'GARRAPATA', nombre: 'Control de garrapata', producto: 'Fluazurón pour-on', diaDesdeIngreso: 21, repetirCadaDias: 21, aplicaciones: 4 },
+        ],
+      },
+    },
+  });
+  await prisma.protocoloSanitario.create({
+    data: {
+      nombre: 'Protocolo mínimo',
+      descripcion: 'Solo vacunación clostridial con refuerzo.',
+      items: {
+        create: [
+          { tipo: 'VACUNA', nombre: 'Vacuna clostridial', producto: 'Clostridial polivalente', diaDesdeIngreso: 0 },
+          { tipo: 'VACUNA', nombre: 'Refuerzo clostridial', producto: 'Clostridial polivalente', diaDesdeIngreso: 21 },
+        ],
+      },
+    },
   });
 
   // ---------- Lote cerrado (historial) ----------
@@ -159,6 +207,7 @@ async function main() {
       precioVentaKg: 9800,
     },
   });
+  await cargarRacion(lote1, insumos, veterinario.id);
   await cargarAlimentacion(lote1, insumos, { suplementoKg: 180, silajeKg: 1800 }, HOY, encargado.id);
   await cargarPesadas(lote1, [
     { fecha: hace(28), peso: 394 },
@@ -187,6 +236,7 @@ async function main() {
       gdpObjetivo: 0.45,
     },
   });
+  await cargarRacion(lote2, insumos, veterinario.id);
   await cargarAlimentacion(lote2, insumos, { suplementoKg: 120, silajeKg: 1200 }, HOY, encargado.id);
   await cargarPesadas(lote2, [
     { fecha: hace(64), peso: 390 },
@@ -214,6 +264,7 @@ async function main() {
       gdpObjetivo: 0.45,
     },
   });
+  await cargarRacion(lote3, insumos, veterinario.id);
   await cargarAlimentacion(lote3, insumos, { suplementoKg: 150, silajeKg: 1500 }, HOY, encargado.id);
   await prisma.eventoSanitario.createMany({
     data: [

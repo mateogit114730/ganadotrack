@@ -17,7 +17,12 @@ const browser = await chromium.launch({ channel: 'msedge', headless: true });
 async function nuevaPagina(viewport) {
   const ctx = await browser.newContext({ viewport, locale: 'es-AR' });
   const page = await ctx.newPage();
-  page.on('console', (m) => m.type() === 'error' && errores.push(`[console] ${page.url()} ${m.text()}`));
+  // El 401 del intento de login con contraseña incorrecta es esperado: no se cuenta como error.
+  page.on('console', (m) => {
+    if (m.type() !== 'error') return;
+    if (page.url().endsWith('/login') && m.text().includes('401')) return;
+    errores.push(`[console] ${page.url()} ${m.text()}`);
+  });
   page.on('pageerror', (e) => errores.push(`[pageerror] ${page.url()} ${e.message}`));
   page.on('response', (r) => r.status() >= 500 && errores.push(`[http ${r.status()}] ${r.url()}`));
   return { ctx, page };
@@ -55,18 +60,23 @@ const paso = (t) => console.log('✓', t);
   await login(page, 'encargado@ganadotrack.local');
   if (!page.url().endsWith('/alimentacion')) errores.push(`encargado redirigido a ${page.url()}`);
   await foto(page, '10-encargado-inicio');
-  // Clic 1: lote · (escribir kg) · Clic 2: Confirmar
-  await page.getByText('Lote 01 - Angus novillos').click();
-  await page.getByLabel('Suplemento proteico 18%').fill('180');
-  await page.getByLabel('Silaje de sorgo (propio)').fill('1800');
-  await foto(page, '11-encargado-formulario');
+  // Carga en 1 toque: la ración del día ya viene calculada (RF09)
+  const tarjeta1 = page.locator('.MuiCard-root', { hasText: 'Lote 01 - Angus novillos' });
   const t1 = Date.now();
-  await page.getByRole('button', { name: /Confirmar/ }).click();
+  await tarjeta1.getByRole('button', { name: 'Confirmar ración de hoy' }).click();
   await page.getByText(/Registro guardado/).waitFor();
-  paso(`encargado registró alimentación (confirmación en ${Date.now() - t1} ms)`);
+  paso(`encargado confirmó la ración en 1 toque (respuesta en ${Date.now() - t1} ms)`);
   await foto(page, '12-encargado-confirmacion');
-  // Segundo intento: el lote figura como cargado
-  if (!(await page.getByText('Cargado hoy').first().isVisible())) errores.push('no se marca "Cargado hoy"');
+  if (!(await tarjeta1.getByText('Cargado hoy').isVisible())) errores.push('no se marca "Cargado hoy"');
+
+  // Otros kilos: formulario precargado con la ración, se modifica un valor
+  const tarjeta2 = page.locator('.MuiCard-root', { hasText: 'Lote 02 - Angus vaquillonas' });
+  await tarjeta2.getByRole('button', { name: 'Di otros kilos' }).click();
+  await tarjeta2.getByLabel('Silaje de sorgo (propio)').fill('1100');
+  await foto(page, '11-encargado-formulario');
+  await tarjeta2.getByRole('button', { name: 'Confirmar' }).click();
+  await page.getByText(/Registro guardado – Lote 02/).waitFor();
+  paso('encargado cargó otros kilos desde el formulario precargado');
   // Acceso a pantallas de admin debe redirigir
   await page.goto(`${BASE}/dashboard`);
   await page.waitForLoadState('networkidle');
@@ -101,6 +111,14 @@ const paso = (t) => console.log('✓', t);
   await page.getByRole('button', { name: 'Guardar' }).click();
   await page.getByText(/quedan 99 cabezas/).waitFor();
   paso('veterinario registró una baja');
+
+  await page.goto(`${BASE}/protocolos`);
+  await page.getByText('Protocolo feedlot estándar').waitFor();
+  await foto(page, '23-veterinario-protocolos');
+  await page.goto(`${BASE}/raciones`);
+  await page.getByText('Consumo total diario').waitFor();
+  await foto(page, '24-veterinario-raciones');
+  paso('veterinario consulta protocolos y raciones');
   await ctx.close();
 }
 
@@ -110,7 +128,7 @@ const paso = (t) => console.log('✓', t);
   await login(page, 'admin@ganadotrack.local');
   const t0 = Date.now();
   await page.goto(`${BASE}/dashboard`);
-  await page.getByText('Lotes activos').first().waitFor();
+  await page.getByText('Lotes en el corral').first().waitFor();
   await page.waitForLoadState('networkidle');
   paso(`dashboard cargado en ${Date.now() - t0} ms`);
   await foto(page, '30-admin-dashboard');
@@ -130,7 +148,8 @@ const paso = (t) => console.log('✓', t);
   await page.getByRole('button', { name: 'Crear lote' }).click();
   await page.waitForURL(/\/lotes\/\d+/);
   await page.getByText('Lote 04 - Prueba E2E').first().waitFor();
-  paso('admin creó un lote');
+  await page.getByText('sanitario(s) programado(s)', { exact: false }).waitFor();
+  paso('admin creó un lote con el protocolo sanitario por defecto');
 
   // Detalle de Lote 01
   await page.goto(`${BASE}/lotes`);
@@ -151,6 +170,15 @@ const paso = (t) => console.log('✓', t);
   paso('admin registró una pesada');
   await foto(page, '36-admin-pesada-registrada');
 
+  // Corrección: eliminar la última pesada (con confirmación)
+  await page.getByRole('tab', { name: 'Pesadas' }).click();
+  await page.getByTitle('Eliminar la última pesada').click();
+  await page.getByText('¿Eliminar la última pesada?').waitFor();
+  await foto(page, '36b-admin-confirmar-eliminar');
+  await page.getByRole('button', { name: 'Eliminar' }).last().click();
+  await page.getByText('Pesada eliminada').waitFor();
+  paso('admin eliminó la última pesada con confirmación');
+
   // Cierre (solo simulación + confirmación) del Lote 02
   await page.goto(`${BASE}/lotes`);
   await page.getByRole('cell', { name: 'Lote 02 - Angus vaquillonas' }).click();
@@ -168,6 +196,23 @@ const paso = (t) => console.log('✓', t);
   await page.waitForLoadState('networkidle');
   await foto(page, '38-admin-insumos');
 
+  // Reportes: descarga real de PDF y Excel desde el navegador (RF13)
+  await page.goto(`${BASE}/reportes`);
+  await page.getByText('Planilla para el contador', { exact: true }).waitFor();
+  await foto(page, '38b-admin-reportes');
+  const [excel] = await Promise.all([
+    page.waitForEvent('download'),
+    page.getByRole('button', { name: 'Descargar Excel' }).click(),
+  ]);
+  const [pdf] = await Promise.all([
+    page.waitForEvent('download'),
+    page.getByRole('button', { name: 'Descargar PDF' }).first().click(),
+  ]);
+  if (!excel.suggestedFilename().endsWith('.xlsx') || !pdf.suggestedFilename().endsWith('.pdf')) {
+    errores.push(`descargas inesperadas: ${excel.suggestedFilename()} / ${pdf.suggestedFilename()}`);
+  }
+  paso(`reportes descargados: ${pdf.suggestedFilename()} y ${excel.suggestedFilename()}`);
+
   await page.goto(`${BASE}/usuarios`);
   await page.getByText('encargado@ganadotrack.local').waitFor();
   await foto(page, '39-admin-usuarios');
@@ -175,6 +220,14 @@ const paso = (t) => console.log('✓', t);
   await page.goto(`${BASE}/configuracion`);
   await page.getByText(/Rendimiento al gancho/).first().waitFor();
   await foto(page, '40-admin-configuracion');
+
+  await page.goto(`${BASE}/perfil`);
+  await page.getByText('Cambiar contraseña').first().waitFor();
+  await foto(page, '43-perfil');
+  await page.goto(`${BASE}/no-existe`);
+  await page.getByText('Esta tranquera está cerrada').waitFor();
+  await foto(page, '44-pagina-404');
+  paso('perfil y página 404');
   await ctx.close();
 }
 
@@ -182,7 +235,7 @@ const paso = (t) => console.log('✓', t);
 {
   const { ctx, page } = await nuevaPagina({ width: 390, height: 844 });
   await login(page, 'admin@ganadotrack.local');
-  await page.getByText('Lotes activos').first().waitFor();
+  await page.getByText('Lotes en el corral').first().waitFor();
   await page.waitForLoadState('networkidle');
   const anchoDoc = await page.evaluate(() => document.documentElement.scrollWidth);
   if (anchoDoc > 390) errores.push(`dashboard móvil con scroll horizontal: ${anchoDoc}px`);
