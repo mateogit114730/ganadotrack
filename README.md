@@ -7,7 +7,7 @@ Alumno: Mateo Agustín Sgüerzo · Docente: Silvia Hoferek.
 
 [![CI](https://github.com/mateogit114730/ganadotrack/actions/workflows/ci.yml/badge.svg)](https://github.com/mateogit114730/ganadotrack/actions/workflows/ci.yml)
 
-- **Aplicación online:** *(se completa al publicar)*
+- **Aplicación online:** <https://ganadotrack.vercel.app> (API: <https://ganadotrack-api.onrender.com/api/docs>)
 - **Tablero del proyecto:** [GitHub Projects](https://github.com/users/mateogit114730/projects/1)
 - **Documentación:** [docs/](docs/README.md)
 
@@ -82,6 +82,7 @@ npm run dev                   # aplicación en http://localhost:5173
 | `npm run db:migrate` | `backend/` | Crea una nueva migración tras cambiar `schema.prisma` |
 | `npm run recorrido` | `e2e/` | Recorrido E2E con los 3 roles en Microsoft Edge (requiere `SEED_PASSWORD`; genera las capturas) |
 | `node offline.mjs <carpeta>` | `e2e/` | Prueba E2E del modo sin conexión contra `npm run preview` |
+| `npm run humo` | `e2e/` | Prueba de humo de **solo lectura** contra la app publicada (contraseña en `e2e/.password-produccion`) |
 
 Documentación interactiva de la API: <http://localhost:4000/api/docs> (Swagger UI).
 

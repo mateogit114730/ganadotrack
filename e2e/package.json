@@ -4,7 +4,8 @@
   "type": "module",
   "description": "Recorrido end-to-end en el navegador (Microsoft Edge) con los tres roles",
   "scripts": {
-    "recorrido": "node recorrido.mjs ../docs/capturas"
+    "recorrido": "node recorrido.mjs ../docs/capturas",
+    "humo": "node humo-produccion.mjs"
   },
   "devDependencies": {
     "playwright-core": "^1.64.0"

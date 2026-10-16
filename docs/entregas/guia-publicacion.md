@@ -15,7 +15,7 @@ Pasos realizados (por si hay que repetirlos en otra PC):
    ```
    Elegir: **GitHub.com → HTTPS → Login with a web browser**, y copiar el código que aparece.
 
-## B. Base de datos – Neon ⏱
+## B. Base de datos – Neon ✅ hecho el 15/10
 
 1. Entrar a <https://neon.tech> → **Sign up with GitHub**.
 2. **Create project**:
@@ -25,7 +25,7 @@ Pasos realizados (por si hay que repetirlos en otra PC):
 3. En **Connection string** copiar la cadena que empieza con `postgresql://…` (con la opción *Pooled connection* desactivada).
 4. Guardarla para el paso C. **No la pegues en el chat ni en el repositorio**: es una contraseña.
 
-## C. API – Render ⏱
+## C. API – Render ✅ hecho el 15/10 (https://ganadotrack-api.onrender.com)
 
 1. Entrar a <https://render.com> → **Sign up with GitHub**.
 2. **New → Blueprint** → elegir el repositorio `ganadotrack`. Render lee el archivo `render.yaml`.
@@ -36,7 +36,7 @@ Pasos realizados (por si hay que repetirlos en otra PC):
 4. **Apply**. El primer despliegue tarda unos 5 minutos. Al terminar, abrir `https://<tu-servicio>.onrender.com/api/health`: tiene que responder `{"estado":"ok","baseDeDatos":"ok"}`.
 5. Avisar en la sesión la URL de la API. Con tu confirmación se cargan los datos de demostración en la base de producción.
 
-## D. Aplicación – Vercel ⏱
+## D. Aplicación – Vercel ✅ hecho el 15/10 (https://ganadotrack.vercel.app)
 
 1. Entrar a <https://vercel.com> → **Continue with GitHub**.
 2. **Add New → Project** → importar `ganadotrack`:
@@ -55,3 +55,5 @@ Pasos realizados (por si hay que repetirlos en otra PC):
 
 - **Primera visita del día:** el plan gratuito de Render "duerme" la API. La primera visita tarda unos 50 segundos; después responde normal. Antes de la defensa, abrir la app 2 minutos antes.
 - **Respaldos:** Neon guarda el historial de la base y permite restaurarla a un momento anterior desde su panel.
+- **Si el despliegue de Render falla con `P1002 … advisory lock`** (pasa tras resetear la contraseña de Neon): agregar en Render la variable `PRISMA_SCHEMA_DISABLE_ADVISORY_LOCK=1`. Ya está cargada.
+- **Nunca pegar la cadena de Neon en un chat ni en un archivo del repositorio.** Si pasa, usar *Reset password* en Neon y actualizar `DATABASE_URL` en Render.

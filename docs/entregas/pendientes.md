@@ -21,14 +21,18 @@ Repositorio: https://github.com/mateogit114730/ganadotrack · Tablero: https://g
 3. Crear el tablero de GitHub Projects y cerrar los issues ya resueltos.
 4. Verificar que la CI quede en verde (lint, 118 + 6 pruebas, cobertura, build).
 
-### 3. 👤 Crear las cuentas de publicación — *antes del 25/10, ~15 min en total*
+### 3. ✅ Crear las cuentas de publicación — *hecho el 15/10*
+App: https://ganadotrack.vercel.app · API: https://ganadotrack-api.onrender.com (Neon en us-west-2, Render en Virginia: el dashboard responde en ≈ 1,25 s, dentro de RNF03).
 Seguir `docs/entregas/guia-publicacion.md`, secciones B, C y D:
 1. **Neon:** proyecto `ganadotrack`, región US East 1. Guardar la cadena de conexión (no pegarla en el chat).
 2. **Render:** New → Blueprint con el repo. Cargar `DATABASE_URL`, `CORS_ORIGIN` y `SEED_PASSWORD`.
 3. **Vercel:** importar el repo con raíz `frontend` y `VITE_API_URL` apuntando a Render.
 4. Pasar en la sesión las dos URLs públicas.
 
-### 4. 🤖👥 Poner en marcha la producción — *después del paso 3*
+### 4. 🟡 Poner en marcha la producción — *casi completo*
+- ✅ Seed cargado · ✅ CORS correcto · ✅ variable `API_URL` del flujo "mantener activa" · ✅ prueba de humo de solo lectura (`npm run humo` en `e2e/`).
+- ⏳ 👤 Cambiar la contraseña de demostración por una difícil de adivinar (repetir el seed y guardarla en `e2e/.password-produccion`).
+- ⏳ 👤 Probar la instalación y el modo sin señal en tu celular.
 1. Cargar los datos de demostración en Neon (pido confirmación antes, porque borra lo que haya).
 2. Ajustar `CORS_ORIGIN` si la URL de Vercel cambió, y activar la variable `API_URL` del flujo "mantener activa".
 3. Correr el recorrido E2E contra las URLs públicas, sin los pasos que modifican datos.

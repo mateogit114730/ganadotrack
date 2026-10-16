@@ -1,6 +1,6 @@
 # Descripción de la API
 
-- **Base:** `/api` (en local: `http://localhost:4000/api`; en producción: `https://<servicio>.onrender.com/api`)
+- **Base:** `/api` (en local: `http://localhost:4000/api`; en producción: `https://ganadotrack-api.onrender.com/api`)
 - **Formato:** JSON · fechas `AAAA-MM-DD` · pesos en kg · importes en ARS. Los reportes devuelven archivos PDF o Excel.
 - **Documentación interactiva:** `/api/docs` (Swagger UI). La especificación OpenAPI 3 está en [`backend/src/docs/openapi.yaml`](../../backend/src/docs/openapi.yaml): 41 rutas y 54 operaciones.
 - **Autenticación:** encabezado `Authorization: Bearer <token>`, obtenido con `POST /auth/login`. El token vence a las 8 h sin actividad; las respuestas pueden traer un token renovado en `X-Token-Renovado`.

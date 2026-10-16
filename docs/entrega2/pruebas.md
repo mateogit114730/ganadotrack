@@ -198,6 +198,7 @@ Ejecutadas el 15/10/2026 sobre los datos de demostración recién cargados.
 | CP-83 | Perfil y ruta inexistente | Sesión iniciada | "Mi perfil"; URL inexistente | Pantalla de perfil; página 404 con regreso al inicio | Según lo esperado | ✅ Aprobado |
 | CP-84 | Carga sin conexión de punta a punta (CU21) | App de producción (*preview*) abierta con señal | Cortar la red, recargar, confirmar la ración; restablecer la red | Sin red, la app abre y la carga queda "En el teléfono"; al volver la señal se envía sola | *Service worker* activo; **2 registros** sincronizados, sin duplicados | ✅ Aprobado |
 | CP-85 | Rendimiento del dashboard (RNF03) | 3 lotes activos, clima configurado | Abrir el dashboard | < 3 s | **≈ 1.070 ms** | ✅ Aprobado |
+| CP-86 | Prueba de humo en producción (`e2e/humo-produccion.mjs`) | App publicada en Vercel + Render + Neon con los datos de demostración | Ingreso con los 3 roles, todas sus pantallas y descarga de PDF y Excel; cualquier escritura en la API se bloquea | Sin errores de consola ni de la API; *service worker* activo; datos sin modificar | Según lo esperado; respuesta del dashboard de la API ≈ 1,25 s | ✅ Aprobado (15/10) |
 
 Las pruebas unitarias (42) verifican con valores calculados a mano cada fórmula documentada. Por ejemplo:
 - GDP(380 → 395 kg en 30 días) = 0,5.
