@@ -12,12 +12,18 @@
 | PESADA | Pesada mensual del lote con la GDP calculada | RF04 |
 | EVENTO_SANITARIO | Evento del calendario sanitario: programado o realizado | RF05 |
 | BAJA | Muerte de animales del lote, con su causa | RF05 |
-| PARAMETRO | Valores configurables (rendimiento al gancho, días de aviso) | RF04, RF05, RF06 |
+| PARAMETRO | Valores configurables (rendimiento al gancho, días de aviso, cobertura de stock, ubicación) | RF04, RF05, RF06, RF11, RF12 |
+| RACION | Kg de un insumo por cabeza y por día para un lote, desde una fecha (historial) | RF09 |
+| PROTOCOLO_SANITARIO | Plan sanitario tipo que se aplica al crear un lote | RF10 |
+| PROTOCOLO_ITEM | Evento del protocolo: qué se aplica, a los cuántos días del ingreso y cada cuánto se repite | RF10 |
+
+Las tres últimas entidades se agregaron en la versión final. Además, INSUMO incorporó el **porcentaje de materia seca** (RF09) y REGISTRO_ALIMENTACION, el **identificador de operación** para la carga sin conexión (RF14).
 
 ## 2. Diagrama Entidad-Relación
 
 ```mermaid
 erDiagram
+  direction LR
   USUARIO ||--o{ REGISTRO_ALIMENTACION : "carga"
   USUARIO ||--o{ COMPRA_INSUMO : "registra"
   USUARIO ||--o{ PESADA : "registra"
@@ -29,6 +35,10 @@ erDiagram
   LOTE ||--o{ BAJA : "sufre"
   INSUMO ||--o{ REGISTRO_ALIMENTACION : "se consume en"
   INSUMO ||--o{ COMPRA_INSUMO : "se repone con"
+  LOTE ||--o{ RACION : "tiene"
+  INSUMO ||--o{ RACION : "forma parte de"
+  USUARIO |o--o{ RACION : "define"
+  PROTOCOLO_SANITARIO ||--|{ PROTOCOLO_ITEM : "contiene"
 
   USUARIO {
     int id PK
@@ -60,6 +70,7 @@ erDiagram
     decimal stock_kg
     decimal stock_minimo_kg
     decimal precio_kg
+    decimal materia_seca_pct
   }
   COMPRA_INSUMO {
     int id PK
@@ -78,6 +89,7 @@ erDiagram
     decimal precio_kg
     decimal costo
     int usuario_id FK
+    varchar operacion_id "nullable"
   }
   PESADA {
     int id PK
@@ -115,9 +127,37 @@ erDiagram
     varchar valor
     varchar descripcion
   }
+  RACION {
+    int id PK
+    int lote_id FK
+    int insumo_id FK
+    decimal kg_cabeza_dia
+    date vigente_desde
+    int usuario_id FK "nullable"
+  }
+  PROTOCOLO_SANITARIO {
+    int id PK
+    varchar nombre UK
+    varchar descripcion
+    boolean por_defecto
+  }
+  PROTOCOLO_ITEM {
+    int id PK
+    int protocolo_id FK
+    enum tipo "VACUNA | ANTIPARASITARIO | GARRAPATA | OTRO"
+    varchar nombre
+    varchar producto
+    int dia_desde_ingreso
+    int repetir_cada_dias "nullable"
+    int aplicaciones
+  }
 ```
 
-> Para la entrega en Word: pegar en <https://mermaid.live> y exportar como PNG (reemplaza la figura del ER de la 1ª entrega).
+> PROTOCOLO_SANITARIO no tiene una relación con LOTE ni con EVENTO_SANITARIO. Al aplicarlo, el sistema **copia** sus ítems como eventos pendientes del lote. Así, si el veterinario modifica el protocolo después, los calendarios ya generados no cambian, y cada evento se puede reprogramar en forma individual.
+
+> Imágenes para el Word, generadas con `e2e/render-diagramas.mjs`:
+> - [`docs/diagramas/der-resumido.png`](../diagramas/der-resumido.png): entidades y relaciones de negocio. Es la figura del cuerpo del documento y reemplaza la del ER de la 1ª entrega. No muestra la relación de auditoría de USUARIO con cada registro (ver Cardinalidades).
+> - [`docs/diagramas/der.png`](../diagramas/der.png): el diagrama completo, con todos los campos, para el anexo.
 
 ### Cardinalidades
 
@@ -130,8 +170,13 @@ erDiagram
 | LOTE – BAJA | 1 : N | Un lote puede tener varias bajas |
 | INSUMO – COMPRA_INSUMO | 1 : N | Historial de compras del insumo |
 | USUARIO – registros | 1 : N | Auditoría: quién cargó cada dato. En EVENTO_SANITARIO es opcional (0..1) porque un evento programado todavía no tiene ejecutor |
+| LOTE – RACION | 1 : N | Un lote tiene varias raciones a lo largo del tiempo (una vigente por insumo) |
+| INSUMO – RACION | 1 : N | Un insumo forma parte de la ración de varios lotes |
+| PROTOCOLO_SANITARIO – PROTOCOLO_ITEM | 1 : N (al menos 1) | Un protocolo contiene uno o más eventos; si se elimina el protocolo, se eliminan sus ítems (cascada) |
 
-**Relación N:M resuelta:** LOTE e INSUMO tienen una relación muchos a muchos (un lote consume varios insumos y un insumo alimenta varios lotes). Se resuelve con la entidad asociativa REGISTRO_ALIMENTACION, que además guarda los atributos propios de la relación: fecha, kg, precio aplicado y costo.
+**Relaciones N:M resueltas:** LOTE e INSUMO tienen dos relaciones muchos a muchos (un lote consume varios insumos y un insumo alimenta varios lotes):
+- **REGISTRO_ALIMENTACION** registra lo que **se entregó**: fecha, kg, precio aplicado y costo.
+- **RACION** registra lo que **se planifica entregar**: kg por cabeza por día y fecha de vigencia.
 
 ## 3. Normalización
 
@@ -147,6 +192,9 @@ El modelo está en **tercera forma normal (3FN)**:
 | `registro_alimentacion.precio_kg` y `costo` | Guardan el precio **vigente al momento de la carga**. Si el precio del insumo cambia después, el costo histórico no debe cambiar |
 | `pesada.gdp` | Se guarda calculada al registrar la pesada. Es un dato histórico que no debe variar si se corrige una pesada posterior |
 | `insumo.stock_kg` | Saldo actual, mantenido en las mismas transacciones que lo modifican. Evita recalcular "compras − consumos" en cada consulta |
+| Eventos generados por un protocolo | Copian el tipo, el nombre y el producto del ítem: el calendario del lote es independiente de cambios posteriores al protocolo |
+
+Los datos derivados de la versión final tampoco se guardan: los kg del día de la ración, la conversión alimenticia, los días de cobertura y la compra sugerida se calculan en cada consulta.
 
 ## 4. Diccionario de datos
 
@@ -188,6 +236,7 @@ Convenciones: claves `SERIAL`; importes en **ARS** (`NUMERIC(14,2)`); pesos y ca
 | stock_kg | NUMERIC(12,2) | No | CHECK ≥ 0 | Stock actual (el silaje se muestra en toneladas) |
 | stock_minimo_kg | NUMERIC(12,2) | No | CHECK ≥ 0 | Por debajo genera alerta |
 | precio_kg | NUMERIC(12,2) | No | CHECK ≥ 0 | Precio vigente (última compra o costo de producción) |
+| materia_seca_pct | NUMERIC(5,2) | No | CHECK > 0 y ≤ 100 · DEFAULT 100 | % de materia seca, para la conversión alimenticia (suplemento ≈ 90, silaje ≈ 35) |
 
 ### COMPRA_INSUMO (`compra_insumo`)
 | Campo | Tipo | Nulo | Restricciones | Descripción |
@@ -210,6 +259,7 @@ Convenciones: claves `SERIAL`; importes en **ARS** (`NUMERIC(14,2)`); pesos y ca
 | precio_kg | NUMERIC(12,2) | No | | Precio aplicado (histórico) |
 | costo | NUMERIC(14,2) | No | CHECK ≥ 0 | kg × precio_kg |
 | usuario_id | INT | No | FK → usuario | Encargado que cargó |
+| operacion_id | VARCHAR(36) | Sí | UNIQUE (operacion_id, insumo_id) | UUID generado en el celular para cada carga; evita duplicados al reenviar una carga hecha sin conexión |
 
 ### PESADA (`pesada`)
 | Campo | Tipo | Nulo | Restricciones | Descripción |
@@ -249,11 +299,48 @@ Convenciones: claves `SERIAL`; importes en **ARS** (`NUMERIC(14,2)`); pesos y ca
 | observaciones | VARCHAR(500) | Sí | | |
 | usuario_id | INT | No | FK → usuario | |
 
+### RACION (`racion`)
+| Campo | Tipo | Nulo | Restricciones | Descripción |
+|---|---|---|---|---|
+| id | SERIAL | No | PK | |
+| lote_id | INT | No | FK → lote | |
+| insumo_id | INT | No | FK → insumo | |
+| kg_cabeza_dia | NUMERIC(8,3) | No | CHECK ≥ 0 (la API limita a 80) | Kg por cabeza por día; 0 quita el insumo de la ración desde esa fecha |
+| vigente_desde | DATE | No | UNIQUE (lote_id, insumo_id, vigente_desde) | La ración vigente de un insumo es la de mayor `vigente_desde` que no supere la fecha consultada |
+| usuario_id | INT | Sí | FK → usuario | Quién la definió |
+| created_at | TIMESTAMP | No | DEFAULT now() | |
+
+### PROTOCOLO_SANITARIO (`protocolo_sanitario`)
+| Campo | Tipo | Nulo | Restricciones | Descripción |
+|---|---|---|---|---|
+| id | SERIAL | No | PK | |
+| nombre | VARCHAR(100) | No | UNIQUE | Ej.: "Protocolo feedlot estándar" |
+| descripcion | VARCHAR(500) | Sí | | |
+| por_defecto | BOOLEAN | No | DEFAULT false · índice único parcial `WHERE por_defecto` | Se propone al crear un lote; solo uno puede estar marcado |
+| created_at | TIMESTAMP | No | DEFAULT now() | |
+
+### PROTOCOLO_ITEM (`protocolo_item`)
+| Campo | Tipo | Nulo | Restricciones | Descripción |
+|---|---|---|---|---|
+| id | SERIAL | No | PK | |
+| protocolo_id | INT | No | FK → protocolo_sanitario (ON DELETE CASCADE) · índice | |
+| tipo | ENUM | No | VACUNA, ANTIPARASITARIO, GARRAPATA, OTRO | Mismo tipo que EVENTO_SANITARIO |
+| nombre | VARCHAR(100) | No | | Nombre del evento a generar |
+| producto | VARCHAR(100) | Sí | | Producto previsto |
+| dia_desde_ingreso | INT | No | CHECK entre 0 y 365 | Primera aplicación: fecha de ingreso + días |
+| repetir_cada_dias | INT | Sí | CHECK > 0 | Frecuencia de repetición |
+| aplicaciones | INT | No | DEFAULT 1 · CHECK entre 1 y 52; si es mayor a 1, `repetir_cada_dias` es obligatorio | Cantidad total de aplicaciones |
+
+**Ejemplo:** el ítem "Control de garrapata", día 21, cada 21 días, 4 aplicaciones, genera eventos en los días 21, 42, 63 y 84 desde el ingreso.
+
 ### PARAMETRO (`parametro`)
 | Clave | Valor inicial | Uso |
 |---|---|---|
 | rendimiento_gancho | 0.57 | kg de carne = peso × cabezas × rendimiento (RF06) |
 | dias_aviso_sanitario | 7 | Anticipación de las alertas sanitarias (RF05) |
+| dias_cobertura_minima | 7 | Por debajo, alerta de stock proyectado (RF11) |
+| horizonte_compra_dias | 14 | Días de consumo que cubre la compra sugerida (RF11) |
+| ubicacion_nombre, ubicacion_latitud, ubicacion_longitud | Pergamino, Buenos Aires (−33,89; −60,57) en los datos de demostración | Localidad del establecimiento para el clima (RF12) |
 
 ## 5. Implementación física
 
@@ -264,6 +351,19 @@ El esquema se define en [`backend/prisma/schema.prisma`](../../backend/prisma/sc
 | `…_init` | Tablas, tipos ENUM, claves primarias y foráneas, índices y restricciones UNIQUE (generada por Prisma) |
 | `…_checks_y_vistas` | **Escrita a mano:** restricciones CHECK, vista `v_resumen_lote` y trigger de lote cerrado |
 | `…_vista_resumen_tipos` | Ajusta los tipos de la vista (las sumas de enteros devuelven `bigint`) |
+| `…_racion_y_materia_seca` | Tabla `racion` y campo `insumo.materia_seca_pct`, con sus CHECK (RF09) |
+| `…_protocolos_sanitarios` | Tablas `protocolo_sanitario` y `protocolo_item`, CHECK de días y repeticiones, e índice único parcial `protocolo_unico_por_defecto` (RF10) |
+| `…_operacion_offline` | **Escrita a mano:** campo `registro_alimentacion.operacion_id` e índice único (operacion_id, insumo_id) para la sincronización sin duplicados (RF14) |
+
+Todas las migraciones son **aditivas**: agregan tablas, columnas o restricciones sin borrar datos. Por eso la base de producción se actualiza con `prisma migrate deploy` al publicar cada versión.
+
+### Índice único parcial del protocolo por defecto
+
+```sql
+CREATE UNIQUE INDEX protocolo_unico_por_defecto ON protocolo_sanitario (por_defecto) WHERE por_defecto;
+```
+
+Solo indexa las filas con `por_defecto = true`, de modo que la base rechaza un segundo protocolo marcado por defecto. La API, al marcar uno nuevo, desmarca el anterior en la misma transacción.
 
 ### Vista `v_resumen_lote`
 
@@ -331,6 +431,28 @@ ORDER BY l.nombre, i.nombre;
 **f) Bajas por causa** (relacionado con el caso de anaplasmosis del relevamiento):
 ```sql
 SELECT causa, SUM(cantidad) AS animales FROM baja GROUP BY causa ORDER BY animales DESC;
+```
+
+**g) Ración vigente hoy y kg del día por lote** (RF09):
+```sql
+SELECT DISTINCT ON (r.lote_id, r.insumo_id)
+       v.nombre AS lote, i.nombre AS insumo, r.kg_cabeza_dia,
+       ROUND(r.kg_cabeza_dia * v.cabezas_actuales) AS kg_del_dia
+FROM racion r
+JOIN v_resumen_lote v ON v.lote_id = r.lote_id AND v.estado = 'ACTIVO'
+JOIN insumo i ON i.id = r.insumo_id
+WHERE r.vigente_desde <= CURRENT_DATE
+ORDER BY r.lote_id, r.insumo_id, r.vigente_desde DESC;
+```
+*(Las filas con 0 kg indican que el insumo se quitó de la ración.)*
+
+**h) Cargas sincronizadas desde el celular** (RF14):
+```sql
+SELECT fecha, operacion_id, COUNT(*) AS insumos, SUM(costo) AS costo
+FROM registro_alimentacion
+WHERE operacion_id IS NOT NULL
+GROUP BY fecha, operacion_id
+ORDER BY fecha DESC;
 ```
 
 Estas consultas se pueden ejecutar con `docker exec -it ganadotrack-db psql -U ganadotrack` o desde Prisma Studio (`npm run db:studio`).

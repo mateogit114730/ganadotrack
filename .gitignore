@@ -8,3 +8,6 @@ coverage/
 Thumbs.db
 .vscode/*
 !.vscode/extensions.json
+
+# Contraseña de demostración de producción (solo local, para las pruebas E2E)
+.password-produccion
