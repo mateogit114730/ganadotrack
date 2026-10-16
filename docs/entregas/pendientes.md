@@ -55,9 +55,9 @@ Seguir `docs/entregas/guia-publicacion.md`, secciones B, C y D:
 
 ## Prioridad 3 – Documentación (lo que más pesa en la nota escrita)
 
-### 7. 🤖 Actualizar `docs/entrega2/` con todo lo nuevo — *16/10 al 24/10*
+### 7. ✅ Actualizar `docs/entrega2/` con todo lo nuevo — *hecho el 15/10* (revisión 👥 pendiente)
 1. **Requerimientos:** agregar RF09 Ración y conversión, RF10 Protocolos, RF11 Proyección de stock, RF12 Clima y riesgos, RF13 Reportes, RF14 Modo sin conexión, y el RNF de uso sin señal.
-2. **Casos de uso:** fichas CU15 a CU20 (definir ración, confirmar en 1 toque, gestionar protocolos, consultar proyección, descargar reportes, cargar sin conexión) y el diagrama actualizado.
+2. **Casos de uso:** fichas CU15 a CU22 (definir ración, confirmar en 1 toque, gestionar y aplicar protocolos, consultar proyección, consultar clima, descargar reportes, cargar sin conexión, perfil propio) y el diagrama actualizado.
 3. **Modelo de datos:**
    - Tablas `racion`, `protocolo_sanitario` y `protocolo_item`.
    - Campos `materia_seca_pct` y `operacion_id`.
@@ -85,7 +85,7 @@ Seguir `docs/entregas/guia-publicacion.md`, secciones B, C y D:
 11. **README del repositorio:** funciones nuevas, scripts (`test:coverage`, `e2e`) y link de producción.
 
 ### 8. 🤖 Capturas y diagramas finales — *24/10 al 26/10*
-1. Volver a cargar los datos y correr `e2e/recorrido.mjs` y `e2e/offline.mjs` para regenerar todas las capturas con el diseño final.
+1. ✅ (15/10) Volver a cargar los datos y correr `e2e/recorrido.mjs` y `e2e/offline.mjs` para regenerar todas las capturas con el diseño final. Falta: que la franja del menú lateral llegue hasta abajo en las capturas de página completa, y capturas de GitHub (tablero, milestones, Actions, tags, PR #30) en `docs/capturas/github/`.
 2. Script `docs/herramientas/render-diagramas.mjs`: convertir a PNG los diagramas Mermaid (arquitectura, DER, Gantt, secuencia, flujo de ramas) con Playwright y Edge.
 3. Convertir el diagrama de casos de uso (PlantUML) a PNG.
 

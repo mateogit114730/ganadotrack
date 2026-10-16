@@ -3,18 +3,17 @@
 Pasos que requieren tu cuenta o tu confirmación. Los marcados con ⏱ llevan unos 5 minutos cada uno.
 Cuando termines cada bloque, avisá en la sesión de Claude Code y se continúa desde ahí.
 
-## A. GitHub (repositorio, issues y tablero) ⏱
+## A. GitHub (repositorio, issues y tablero) ✅ hecho el 15/10
 
-1. Instalar GitHub CLI desde una terminal (PowerShell):
+Repositorio: <https://github.com/mateogit114730/ganadotrack> · Tablero: <https://github.com/users/mateogit114730/projects/1>.
+
+Pasos realizados (por si hay que repetirlos en otra PC):
+1. Instalar GitHub CLI: `winget install GitHub.cli`.
+2. Iniciar sesión con los permisos necesarios para la CI y el tablero:
    ```powershell
-   winget install GitHub.cli
-   ```
-2. Cerrar y volver a abrir la terminal, y ejecutar:
-   ```powershell
-   gh auth login
+   gh auth login --scopes project,workflow
    ```
    Elegir: **GitHub.com → HTTPS → Login with a web browser**, y copiar el código que aparece.
-3. Avisar en la sesión. Con eso se crea el repositorio `ganadotrack` y se suben las ramas `main` y `develop`, los tags de versión, los issues, los milestones y el tablero de GitHub Projects.
 
 ## B. Base de datos – Neon ⏱
 
