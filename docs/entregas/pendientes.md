@@ -8,12 +8,14 @@ Estado al 15/10/2026: el sistema está completo y probado (F1 a F3). Falta publi
 
 ## Prioridad 1 – Bloqueantes (hacer primero: lo demás depende de esto)
 
-### 1. 👤 Habilitar GitHub — *hoy o mañana, 5 min*
+### 1. ✅ Habilitar GitHub — *hecho el 15/10*
 1. En PowerShell: `winget install GitHub.cli`.
 2. Cerrar y abrir la terminal: `gh auth login` → GitHub.com → HTTPS → Login with a web browser.
 3. Avisar en la sesión.
 
-### 2. 🤖 Publicar el repositorio — *apenas termine el paso 1*
+### 2. ✅ Publicar el repositorio — *hecho el 15/10*
+Repositorio: https://github.com/mateogit114730/ganadotrack · Tablero: https://github.com/users/mateogit114730/projects/1 · `main` = versión candidata `ganadotrack-1.1.1.0`, CI en verde.
+
 1. Crear el repo `ganadotrack` y subir `main`, `develop` y los tags 1.0.5.0, 1.0.7.0, 1.0.9.0 y 1.1.0.0.
 2. Crear las etiquetas, los milestones F1 a F6 y los issues #1 a #29 (los 17 originales + los nuevos), con el mismo número que usan los commits.
 3. Crear el tablero de GitHub Projects y cerrar los issues ya resueltos.
