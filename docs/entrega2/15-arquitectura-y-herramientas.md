@@ -344,7 +344,7 @@ flowchart LR
   subgraph Render["Render · Web Service (Virginia)"]
     API["API Node.js 24<br/>npm start"]
   end
-  subgraph Neon["Neon · AWS us-east-1"]
+  subgraph Neon["Neon · AWS us-west-2 (Oregón)"]
     PG[("PostgreSQL 17")]
   end
   GH["GitHub<br/>rama main"]
@@ -361,9 +361,9 @@ flowchart LR
 | Componente | Plataforma | Configuración versionada | Variables (cargadas en la plataforma, nunca en Git) |
 |---|---|---|---|
 | Frontend | Vercel | `frontend/vercel.json`: *rewrite* de todas las rutas a la SPA y caché del *service worker* | `VITE_API_URL` |
-| API | Render | `render.yaml`: Node 24, *build* con migraciones, *health check* en `/api/health`, misma región que la base | `DATABASE_URL`, `CORS_ORIGIN`, `SEED_PASSWORD` (`JWT_SECRET` lo genera Render) |
+| API | Render | `render.yaml`: Node 24, *build* con migraciones, *health check* en `/api/health`, región Virginia | `DATABASE_URL`, `CORS_ORIGIN`, `SEED_PASSWORD` (`JWT_SECRET` lo genera Render) |
 | Base de datos | Neon | Migraciones de Prisma | — |
 
-- La API y la base están en la misma región (este de EE. UU.) para minimizar la latencia entre ambas.
+- La API (Virginia) y la base (Oregón) quedaron en regiones distintas de EE. UU.; cada consulta suma unos 65 ms de ida y vuelta. Medido en producción, el dashboard responde en ≈ 1,25 s, dentro del límite de RNF03 (3 s). Si hiciera falta, se puede mover la API a Oregón cambiando `region` en `render.yaml` y volviendo a crear el servicio.
 - El plan gratuito de Render "duerme" la API tras 15 minutos sin uso. La primera visita tarda unos 50 s en despertarla. Para evitarlo en horario de trabajo, el flujo `mantener-activa.yml` de GitHub Actions consulta `/api/health` cada 14 minutos en días hábiles.
 - Cada *push* a `main` vuelve a publicar ambos componentes y aplica las migraciones pendientes.
