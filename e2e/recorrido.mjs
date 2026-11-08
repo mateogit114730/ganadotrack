@@ -37,7 +37,15 @@ async function login(page, email) {
   await page.waitForLoadState('networkidle');
 }
 
-const foto = (page, nombre) => page.screenshot({ path: `${SALIDA}/${nombre}.png`, fullPage: true });
+// Captura de página completa. El menú lateral es fijo y mide el alto de la ventana: para que llegue
+// hasta abajo en la imagen, la ventana se agranda al alto de la página antes de capturar.
+async function foto(page, nombre) {
+  const ventana = page.viewportSize();
+  const alto = await page.evaluate(() => document.documentElement.scrollHeight);
+  if (alto > ventana.height) await page.setViewportSize({ width: ventana.width, height: alto });
+  await page.screenshot({ path: `${SALIDA}/${nombre}.png`, fullPage: true });
+  await page.setViewportSize(ventana);
+}
 const paso = (t) => console.log('✓', t);
 
 // ---------------- Login y credenciales inválidas ----------------
