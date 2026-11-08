@@ -1,4 +1,6 @@
-# Pendientes para la entrega del 05/11/2026
+# Pendientes para la entrega final
+
+> **Estado al 08/11/2026:** documento final (Word y PDF), presentación, guion de la defensa y versión `ganadotrack-1.1.1.1` terminados. Quedan pendientes: cambiar la contraseña de demostración en producción (punto 4) y la validación con el productor (puntos 5 y 6, pasan a trabajo futuro).
 
 Estado al 15/10/2026: el sistema está completo y probado (F1 a F3). Falta publicarlo, validarlo con el productor y cerrar la documentación.
 
@@ -21,14 +23,18 @@ Repositorio: https://github.com/mateogit114730/ganadotrack · Tablero: https://g
 3. Crear el tablero de GitHub Projects y cerrar los issues ya resueltos.
 4. Verificar que la CI quede en verde (lint, 118 + 6 pruebas, cobertura, build).
 
-### 3. 👤 Crear las cuentas de publicación — *antes del 25/10, ~15 min en total*
+### 3. ✅ Crear las cuentas de publicación — *hecho el 15/10*
+App: https://ganadotrack.vercel.app · API: https://ganadotrack-api.onrender.com (Neon en us-west-2, Render en Virginia: el dashboard responde en ≈ 1,25 s, dentro de RNF03).
 Seguir `docs/entregas/guia-publicacion.md`, secciones B, C y D:
 1. **Neon:** proyecto `ganadotrack`, región US East 1. Guardar la cadena de conexión (no pegarla en el chat).
 2. **Render:** New → Blueprint con el repo. Cargar `DATABASE_URL`, `CORS_ORIGIN` y `SEED_PASSWORD`.
 3. **Vercel:** importar el repo con raíz `frontend` y `VITE_API_URL` apuntando a Render.
 4. Pasar en la sesión las dos URLs públicas.
 
-### 4. 🤖👥 Poner en marcha la producción — *después del paso 3*
+### 4. ✅ Poner en marcha la producción — *hecho el 15/10*
+- ✅ Seed cargado · ✅ CORS correcto · ✅ variable `API_URL` del flujo "mantener activa" · ✅ prueba de humo de solo lectura (`npm run humo` en `e2e/`).
+- ✅ Prueba en un celular real: app instalada, carga en modo avión del Lote 01 y sincronización al volver la señal (2 registros, sin duplicados).
+- ⚠️ 👤 **Antes del 29/10:** cambiar la contraseña de demostración (los emails de los usuarios son públicos en el README). Repetir el seed con la nueva y guardarla en `e2e/.password-produccion`.
 1. Cargar los datos de demostración en Neon (pido confirmación antes, porque borra lo que haya).
 2. Ajustar `CORS_ORIGIN` si la URL de Vercel cambió, y activar la variable `API_URL` del flujo "mantener activa".
 3. Correr el recorrido E2E contra las URLs públicas, sin los pasos que modifican datos.
@@ -55,9 +61,9 @@ Seguir `docs/entregas/guia-publicacion.md`, secciones B, C y D:
 
 ## Prioridad 3 – Documentación (lo que más pesa en la nota escrita)
 
-### 7. 🤖 Actualizar `docs/entrega2/` con todo lo nuevo — *16/10 al 24/10*
+### 7. ✅ Actualizar `docs/entrega2/` con todo lo nuevo — *hecho el 15/10* (revisión 👥 pendiente)
 1. **Requerimientos:** agregar RF09 Ración y conversión, RF10 Protocolos, RF11 Proyección de stock, RF12 Clima y riesgos, RF13 Reportes, RF14 Modo sin conexión, y el RNF de uso sin señal.
-2. **Casos de uso:** fichas CU15 a CU20 (definir ración, confirmar en 1 toque, gestionar protocolos, consultar proyección, descargar reportes, cargar sin conexión) y el diagrama actualizado.
+2. **Casos de uso:** fichas CU15 a CU22 (definir ración, confirmar en 1 toque, gestionar y aplicar protocolos, consultar proyección, consultar clima, descargar reportes, cargar sin conexión, perfil propio) y el diagrama actualizado.
 3. **Modelo de datos:**
    - Tablas `racion`, `protocolo_sanitario` y `protocolo_item`.
    - Campos `materia_seca_pct` y `operacion_id`.
@@ -84,12 +90,12 @@ Seguir `docs/entregas/guia-publicacion.md`, secciones B, C y D:
     - 18: "costos completos" y "notificaciones" como trabajo futuro.
 11. **README del repositorio:** funciones nuevas, scripts (`test:coverage`, `e2e`) y link de producción.
 
-### 8. 🤖 Capturas y diagramas finales — *24/10 al 26/10*
-1. Volver a cargar los datos y correr `e2e/recorrido.mjs` y `e2e/offline.mjs` para regenerar todas las capturas con el diseño final.
-2. Script `docs/herramientas/render-diagramas.mjs`: convertir a PNG los diagramas Mermaid (arquitectura, DER, Gantt, secuencia, flujo de ramas) con Playwright y Edge.
-3. Convertir el diagrama de casos de uso (PlantUML) a PNG.
+### 8. ✅ Capturas y diagramas finales — *hecho el 15/10*
+1. ✅ 28 capturas del sistema regeneradas con el diseño final (el menú lateral llega hasta abajo).
+2. ✅ 8 capturas de GitHub en `docs/capturas/github/` (`e2e/capturas-github.mjs`).
+3. ✅ 10 diagramas en PNG en `docs/diagramas/` (`e2e/render-diagramas.mjs`): arquitectura, DER (completo y resumido), Gantt, dos secuencias, despliegue, flujo de herramientas, flujo de ramas y casos de uso (PlantUML).
 
-### 9. 🤖👥 Documento Word final — *27/10 al 31/10*
+### 9. ✅ Documento Word final — *hecho el 08/11*
 1. Generar `docs/entregas/GanadoTrack_EntregaFinal.docx`:
    - Portada con logo, institución, alumno, docente y año.
    - Índice automático.
@@ -100,7 +106,7 @@ Seguir `docs/entregas/guia-publicacion.md`, secciones B, C y D:
 3. Exportar también a PDF.
 4. 👥 Revisar: datos personales, redacción, que nada sobre o falte respecto de la consigna.
 
-### 10. 🤖👥 Presentación de la defensa — *30/10 al 02/11*
+### 10. ✅ Presentación de la defensa — *hecho el 08/11*
 1. Revisar `GanadoTrackDoc/GanadoTrack.pptx` (la presentación anterior) para mantener coherencia.
 2. Generar `docs/entregas/GanadoTrack_Defensa.pptx` con unas 15 diapositivas:
    1. Problema.
@@ -124,7 +130,7 @@ Seguir `docs/entregas/guia-publicacion.md`, secciones B, C y D:
 
 ## Prioridad 4 – Cierre — *03/11 y 04/11*
 
-### 11. 🤖 Versión final
+### 11. ✅ Versión final — *08/11*
 1. Merge `develop` → `main`.
 2. Tag `ganadotrack-1.1.1.1` y release en GitHub con el changelog.
 3. Redesplegar y probar la producción.

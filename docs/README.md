@@ -1,23 +1,52 @@
-# Documentación de GanadoTrack – 2ª entrega
+# Documentación de GanadoTrack – entrega final
 
-Contenido para incorporar al documento de entrega (Word). Cada archivo corresponde a una sección del índice.
+La documentación refleja el **sistema terminado** (versión `ganadotrack-1.1.1.1`).
 
-| Sección | Archivo | Qué hacer en el Word |
-|---|---|---|
-| — | [entrega2/00-correcciones.md](entrega2/00-correcciones.md) | Aplicar las 14 correcciones a las secciones 1–13 y al Anexo I |
-| 3. Link a código / aplicación | [entrega2/03-link.md](entrega2/03-link.md) | Reemplazar "PENDIENTE" |
-| 13. Casos de uso | [entrega2/13-casos-de-uso.md](entrega2/13-casos-de-uso.md) | Reemplazar la sección: lista unificada, diagrama nuevo y 14 fichas |
-| 14. Cronograma del trabajo | [entrega2/14-cronograma.md](entrega2/14-cronograma.md) | Reemplazar "PENDIENTE" (Gantt como imagen) |
-| 15. Herramientas de arquitectura y desarrollo | [entrega2/15-arquitectura-y-herramientas.md](entrega2/15-arquitectura-y-herramientas.md) | Reemplazar "PENDIENTE" |
-| 16. Seguimiento del proyecto | [entrega2/16-seguimiento.md](entrega2/16-seguimiento.md) | Reemplazar "PENDIENTE" y agregar capturas de GitHub |
-| 17. Resultados obtenidos | [entrega2/17-resultados.md](entrega2/17-resultados.md) | Reemplazar "PENDIENTE" |
-| 18. Trabajo futuro | [entrega2/18-trabajo-futuro.md](entrega2/18-trabajo-futuro.md) | Reemplazar "PENDIENTE" |
-| Nueva: Modelo de datos | [entrega2/modelo-de-datos.md](entrega2/modelo-de-datos.md) | Nueva sección (requerida por la guía, punto 4); reemplaza la figura del ER |
-| Nueva: Descripción de la API | [entrega2/api.md](entrega2/api.md) | Nueva sección o anexo |
-| Nueva: Pruebas | [entrega2/pruebas.md](entrega2/pruebas.md) | Nueva sección (guía, punto 7) |
-| Anexo: Manual de instalación | [entrega2/manual-instalacion.md](entrega2/manual-instalacion.md) | Nuevo anexo |
-| Anexo: Manual de usuario | [entrega2/manual-usuario.md](entrega2/manual-usuario.md) | Nuevo anexo, con las capturas de `capturas/` |
+## Entregables (`entregas/`)
 
-**Diagramas:** los bloques ```mermaid``` se convierten en imagen en <https://mermaid.live> (botón *Actions → PNG*) y el de PlantUML en <https://www.plantuml.com/plantuml>.
+| Archivo | Contenido |
+|---|---|
+| `GanadoTrack_EntregaFinal.docx` y `.pdf` | Documento final: secciones 1 a 22 y anexos I a V, con índice y figuras y tablas numeradas |
+| `GanadoTrack_Defensa.pptx` y `.pdf` | Presentación de la defensa (17 diapositivas, con notas del orador) |
+| `guion-defensa.md` | Guion de la demo en vivo y respuestas a las preguntas probables |
+| `video-demo/` | Videos de demostración por rol (plan B de la demo) |
+| `validacion-productor.md` | Mensaje, cuestionario y acta para la validación con el productor (pendiente) |
 
-**Capturas:** `capturas/` contiene las pantallas del sistema, generadas automáticamente por el recorrido E2E (`e2e/`).
+## Cómo se arma el documento
+
+Cada sección se escribe en Markdown en `entrega2/`. Para regenerar el documento después de un cambio:
+
+```bash
+cd docs/entregas && python ensamblar.py          # une las secciones en GanadoTrack_EntregaFinal.md
+cd ../../e2e && node render-diagramas.mjs        # solo si cambió un diagrama Mermaid o PlantUML
+node generar-docx.mjs                            # Markdown → Word
+powershell -ExecutionPolicy Bypass -File actualizar-docx.ps1   # índice y PDF (requiere Microsoft Word)
+node generar-presentacion.mjs                    # presentación (y exportar-pptx.ps1 para el PDF)
+```
+
+## Secciones (`entrega2/`)
+
+| Sección del documento | Archivo |
+|---|---|
+| 1–12. Análisis y definición del sistema | [01-analisis-y-definicion.md](entrega2/01-analisis-y-definicion.md) (incluye 03-link.md y partes de 10-alcance-y-requerimientos.md) |
+| 13. Casos de uso | [13-casos-de-uso.md](entrega2/13-casos-de-uso.md) |
+| 14. Cronograma del trabajo | [14-cronograma.md](entrega2/14-cronograma.md) |
+| 15. Arquitectura y herramientas | [15-arquitectura-y-herramientas.md](entrega2/15-arquitectura-y-herramientas.md) |
+| 16. Modelo de datos | [modelo-de-datos.md](entrega2/modelo-de-datos.md) |
+| 17. Módulos implementados | [17-modulos.md](entrega2/17-modulos.md) |
+| 18. Descripción de la API | [api.md](entrega2/api.md) |
+| 19. Estrategia de pruebas y validación | [pruebas.md](entrega2/pruebas.md) |
+| 20. Seguimiento del proyecto | [16-seguimiento.md](entrega2/16-seguimiento.md) |
+| 21. Resultados obtenidos y conclusiones | [17-resultados.md](entrega2/17-resultados.md) |
+| 22. Trabajo futuro | [18-trabajo-futuro.md](entrega2/18-trabajo-futuro.md) |
+| Anexo I: Relevamiento | [anexo-relevamiento.md](entrega2/anexo-relevamiento.md) |
+| Anexo II: Manual de instalación | [manual-instalacion.md](entrega2/manual-instalacion.md) |
+| Anexo III: Manual de usuario | [manual-usuario.md](entrega2/manual-usuario.md) |
+| Anexo IV: Material de validación | [entregas/validacion-productor.md](entregas/validacion-productor.md) (cuestionario) |
+| Anexo V: Correcciones a la 1ª entrega | [anexo-correcciones.md](entrega2/anexo-correcciones.md) (detalle en [00-correcciones.md](entrega2/00-correcciones.md)) |
+
+Los archivos `14`, `16`, `17` y `18` conservan el número de la sección de la 1ª entrega; en el documento final pasan a ser las secciones 14, 20, 21 y 22.
+
+**Diagramas:** `diagramas/` contiene los diagramas en PNG, generados con `e2e/render-diagramas.mjs` a partir de los bloques Mermaid y PlantUML de la documentación, más los BPMN 3 y 4 de la 1ª entrega.
+
+**Capturas:** `capturas/` contiene las pantallas del sistema, generadas por los recorridos E2E (`e2e/recorrido.mjs` y `e2e/offline.mjs`), y `capturas/github/` las de GitHub (`e2e/capturas-github.mjs`).
