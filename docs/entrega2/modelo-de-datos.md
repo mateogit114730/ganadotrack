@@ -1,6 +1,8 @@
 # Modelo de datos
 
-## 1. Entidades principales
+El modelo se presenta en tres niveles: **conceptual** (entidades del dominio, §1), **lógico** (diagrama entidad-relación con atributos, claves y cardinalidades, §2 a §4) y **físico** (implementación en PostgreSQL, §5).
+
+## 1. Modelo conceptual: entidades principales
 
 | Entidad | Representa | Requerimientos |
 |---|---|---|
@@ -19,7 +21,7 @@
 
 Las tres últimas entidades se agregaron en la versión final. Además, INSUMO incorporó el **porcentaje de materia seca** (RF09) y REGISTRO_ALIMENTACION, el **identificador de operación** para la carga sin conexión (RF14).
 
-## 2. Diagrama Entidad-Relación
+## 2. Modelo lógico: diagrama entidad-relación
 
 ```mermaid
 erDiagram
@@ -342,7 +344,7 @@ Convenciones: claves `SERIAL`; importes en **ARS** (`NUMERIC(14,2)`); pesos y ca
 | horizonte_compra_dias | 14 | Días de consumo que cubre la compra sugerida (RF11) |
 | ubicacion_nombre, ubicacion_latitud, ubicacion_longitud | Pergamino, Buenos Aires (−33,89; −60,57) en los datos de demostración | Localidad del establecimiento para el clima (RF12) |
 
-## 5. Implementación física
+## 5. Modelo físico: implementación en PostgreSQL
 
 El esquema se define en [`backend/prisma/schema.prisma`](../../backend/prisma/schema.prisma) y se crea con migraciones SQL versionadas en `backend/prisma/migrations/`:
 

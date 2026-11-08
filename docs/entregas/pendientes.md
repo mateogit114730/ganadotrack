@@ -1,4 +1,6 @@
-# Pendientes para la entrega del 05/11/2026
+# Pendientes para la entrega final
+
+> **Estado al 08/11/2026:** documento final (Word y PDF), presentación, guion de la defensa y versión `ganadotrack-1.1.1.1` terminados. Quedan pendientes: cambiar la contraseña de demostración en producción (punto 4) y la validación con el productor (puntos 5 y 6, pasan a trabajo futuro).
 
 Estado al 15/10/2026: el sistema está completo y probado (F1 a F3). Falta publicarlo, validarlo con el productor y cerrar la documentación.
 
@@ -32,7 +34,7 @@ Seguir `docs/entregas/guia-publicacion.md`, secciones B, C y D:
 ### 4. ✅ Poner en marcha la producción — *hecho el 15/10*
 - ✅ Seed cargado · ✅ CORS correcto · ✅ variable `API_URL` del flujo "mantener activa" · ✅ prueba de humo de solo lectura (`npm run humo` en `e2e/`).
 - ✅ Prueba en un celular real: app instalada, carga en modo avión del Lote 01 y sincronización al volver la señal (2 registros, sin duplicados).
-- ⚠️ 👤 **Antes del 29/10:** cambiar la contraseña de demostración (`ganadotrack` es fácil de adivinar y los emails son públicos). Repetir el seed con la nueva y guardarla en `e2e/.password-produccion`.
+- ⚠️ 👤 **Antes del 29/10:** cambiar la contraseña de demostración (los emails de los usuarios son públicos en el README). Repetir el seed con la nueva y guardarla en `e2e/.password-produccion`.
 1. Cargar los datos de demostración en Neon (pido confirmación antes, porque borra lo que haya).
 2. Ajustar `CORS_ORIGIN` si la URL de Vercel cambió, y activar la variable `API_URL` del flujo "mantener activa".
 3. Correr el recorrido E2E contra las URLs públicas, sin los pasos que modifican datos.
@@ -93,7 +95,7 @@ Seguir `docs/entregas/guia-publicacion.md`, secciones B, C y D:
 2. ✅ 8 capturas de GitHub en `docs/capturas/github/` (`e2e/capturas-github.mjs`).
 3. ✅ 10 diagramas en PNG en `docs/diagramas/` (`e2e/render-diagramas.mjs`): arquitectura, DER (completo y resumido), Gantt, dos secuencias, despliegue, flujo de herramientas, flujo de ramas y casos de uso (PlantUML).
 
-### 9. 🤖👥 Documento Word final — *27/10 al 31/10*
+### 9. ✅ Documento Word final — *hecho el 08/11*
 1. Generar `docs/entregas/GanadoTrack_EntregaFinal.docx`:
    - Portada con logo, institución, alumno, docente y año.
    - Índice automático.
@@ -104,7 +106,7 @@ Seguir `docs/entregas/guia-publicacion.md`, secciones B, C y D:
 3. Exportar también a PDF.
 4. 👥 Revisar: datos personales, redacción, que nada sobre o falte respecto de la consigna.
 
-### 10. 🤖👥 Presentación de la defensa — *30/10 al 02/11*
+### 10. ✅ Presentación de la defensa — *hecho el 08/11*
 1. Revisar `GanadoTrackDoc/GanadoTrack.pptx` (la presentación anterior) para mantener coherencia.
 2. Generar `docs/entregas/GanadoTrack_Defensa.pptx` con unas 15 diapositivas:
    1. Problema.
@@ -128,7 +130,7 @@ Seguir `docs/entregas/guia-publicacion.md`, secciones B, C y D:
 
 ## Prioridad 4 – Cierre — *03/11 y 04/11*
 
-### 11. 🤖 Versión final
+### 11. ✅ Versión final — *08/11*
 1. Merge `develop` → `main`.
 2. Tag `ganadotrack-1.1.1.1` y release en GitHub con el changelog.
 3. Redesplegar y probar la producción.

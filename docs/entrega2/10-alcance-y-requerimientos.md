@@ -1,4 +1,4 @@
-# Alcance y requerimientos de la versión final (secciones 6, 7, 8, 10 y 11)
+# Alcance y requerimientos de la versión final (secciones 6, 7, 8, 10, 11 y 12)
 
 En la 2ª etapa, el proyecto pasó de MVP a **sistema terminado**. Se incorporaron seis funcionalidades que no estaban en la 1ª entrega. Surgieron del relevamiento y de los problemas que planteó el productor: ración por lote, protocolos sanitarios, proyección de stock ante la sequía, clima, reportes y uso sin señal en el campo.
 
@@ -130,3 +130,142 @@ En la 1ª entrega se excluía el modo offline. En la versión final, la **carga 
 - **RNF02 Disponibilidad:**
   - El sistema se publica en plataformas gestionadas con HTTPS (Vercel, Render y Neon).
   - Si falla un servicio externo (clima), el resto del sistema sigue funcionando.
+
+## 12. Procesos automatizados (agregar al inicio de la sección 12)
+
+La tabla resume qué procesos del establecimiento automatiza el sistema, cómo se hacían antes según el relevamiento y qué modelo BPMN los representa. Los procesos 1 a 4 ya estaban modelados en la 1ª entrega; en la versión final se amplían y se suman los procesos 5 y 6.
+
+| # | Proceso | Antes (relevamiento) | Con GanadoTrack | RF / CU | Modelo BPMN |
+|---|---|---|---|---|---|
+| 1 | Ingreso de un lote | Datos anotados en papel; el calendario sanitario dependía de la memoria y de mensajes con el veterinario | Alta del lote con validación de pesos. El protocolo sanitario genera los eventos del calendario en la misma operación | RF01, RF10 · CU03, CU17 | Proceso 1, ampliado con la tarea "Generar eventos del protocolo" |
+| 2 | Alimentación diaria | Kilos anotados en papel o informados de palabra; stock y costo sin calcular | Ración precargada que el encargado confirma en un toque. El sistema descuenta el stock y calcula el costo del día. Sin señal, la carga queda en el teléfono y se envía sola | RF02, RF03, RF09, RF14 · CU04, CU05, CU16, CU21 | Proceso 2, ampliado con la compuerta "¿Hay señal?" |
+| 3 | Pesada mensual | Pesadas anotadas sin análisis | GDP, proyección al peso objetivo, conversión alimenticia y alerta de bajo rendimiento | RF04, RF09 · CU07 | Proceso 3 |
+| 4 | Control sanitario | Coordinación por WhatsApp, sin avisos previos (pérdida de 26 vacas por anaplasmosis) | Alertas 7 días antes y de eventos vencidos, registro del evento, nuevo control de garrapata a los días del tratamiento y alerta de riesgo de garrapata según el clima | RF05, RF12 · CU08, CU09, CU14, CU19 | Proceso 4 |
+| 5 | Abastecimiento de insumos | Compras sin anticipación; faltantes en épocas de sequía | Proyección de consumo, días de cobertura, fecha de quiebre, compra sugerida y alerta anticipada | RF03, RF11 · CU06, CU18 | Proceso 5 (nuevo) |
+| 6 | Cierre del lote e informes | El productor no conocía su costo por kg ni el margen del lote | Cierre con resumen final, costo de engorde por kg y margen, informe PDF y planilla Excel para el contador | RF01, RF06, RF13 · CU11, CU13, CU20 | Proceso 6 (nuevo) |
+
+### Modelos de los procesos ampliados y nuevos
+
+Los procesos 3 (pesada mensual) y 4 (evento sanitario y alerta) se mantienen como en la 1ª entrega. Los procesos 1 y 2 se amplían y los procesos 5 y 6 son nuevos. Se representan con carriles (*lanes*) por participante, en notación BPMN simplificada: círculo verde = inicio, rectángulo = tarea, rombo = compuerta exclusiva, círculo rojo = fin.
+
+**Proceso 1 – Ingreso de un lote (ampliado):** después de guardar el lote, si se eligió un protocolo sanitario, el sistema genera los eventos de su calendario en la misma operación. Si el lote se carga con una fecha de ingreso pasada, se pueden omitir los eventos ya vencidos.
+
+```mermaid
+flowchart LR
+  subgraph ADM["Administrador"]
+    direction LR
+    I1(("Inicio")) --> A1["Completar el formulario<br/>del lote y elegir<br/>el protocolo"]
+    A1 --> G1{"¿Peso de entrada<br/>< peso objetivo?"}
+  end
+  subgraph SIS["Sistema"]
+    direction LR
+    E1["Mostrar error y<br/>solicitar corrección"]
+    S1["Guardar el lote<br/>como ACTIVO"] --> G2{"¿Eligió un<br/>protocolo?"}
+    G2 -- Sí --> G3{"¿Ingreso con<br/>fecha pasada?"}
+    G3 -- Sí --> O1["Omitir los eventos<br/>ya vencidos"] --> P1
+    G3 -- No --> P1["Generar los eventos<br/>pendientes del protocolo"]
+    P1 --> D1["Mostrar el lote<br/>en el dashboard"]
+    G2 -- No --> D1
+    D1 --> F1(("Fin"))
+  end
+  G1 -- No --> E1 --> A1
+  G1 -- Sí --> S1
+  classDef inicio fill:#D6E6C2,stroke:#1F5E2C,stroke-width:2px
+  classDef fin fill:#F3C7BD,stroke:#A33A22,stroke-width:3px
+  classDef compuerta fill:#FBEFC5,stroke:#C98A1B
+  class I1 inicio
+  class F1 fin
+  class G1,G2,G3 compuerta
+```
+
+**Proceso 2 – Alimentación diaria (ampliado):** el encargado ve la ración del día precargada y la confirma con un toque, o informa otros kilos. Si no hay señal, la aplicación guarda la carga en el teléfono y la envía sola al volver la conexión. El servidor la registra una sola vez (idempotencia).
+
+```mermaid
+flowchart LR
+  subgraph ENC["Encargado"]
+    direction LR
+    I2(("Inicio")) --> A2["Ver la ración<br/>del día del lote"]
+    A2 --> G4{"¿Entregó la<br/>ración sugerida?"}
+    G4 -- Sí --> T2["Confirmar en<br/>un toque"]
+    G4 -- No --> K2["Informar<br/>otros kilos"]
+  end
+  subgraph APP["Aplicación en el celular"]
+    direction LR
+    G5{"¿Hay señal?"}
+    C2["Guardar la carga<br/>en el teléfono"] --> W2(["Vuelve la<br/>conexión"]) --> V2["Enviar las cargas<br/>pendientes en orden"]
+  end
+  subgraph SRV["Servidor"]
+    direction LR
+    R2["Registrar, calcular el costo<br/>y descontar el stock<br/>(una sola vez por carga)"] --> G6{"¿Stock bajo<br/>el mínimo?"}
+    G6 -- Sí --> L2["Generar alerta<br/>de stock"] --> F2(("Fin"))
+    G6 -- No --> F2
+  end
+  T2 --> G5
+  K2 --> G5
+  G5 -- No --> C2
+  G5 -- Sí --> R2
+  V2 --> R2
+  classDef inicio fill:#D6E6C2,stroke:#1F5E2C,stroke-width:2px
+  classDef fin fill:#F3C7BD,stroke:#A33A22,stroke-width:3px
+  classDef compuerta fill:#FBEFC5,stroke:#C98A1B
+  classDef evento fill:#FFFDF8,stroke:#8B6B43,stroke-width:2px,stroke-dasharray:4 3
+  class I2 inicio
+  class F2 fin
+  class G4,G5,G6 compuerta
+  class W2 evento
+```
+
+**Proceso 5 – Abastecimiento de insumos (nuevo):** cada vez que se consulta el stock o el dashboard, el sistema proyecta el consumo y avisa con anticipación cuándo comprar y cuánto.
+
+```mermaid
+flowchart LR
+  subgraph SIS5["Sistema"]
+    direction LR
+    I5(("Consulta del stock<br/>o del dashboard")) --> G7{"¿Hay raciones<br/>vigentes?"}
+    G7 -- Sí --> C5["Consumo diario =<br/>raciones × cabezas"]
+    G7 -- No --> P5["Consumo diario = promedio<br/>de los últimos 14 días"]
+    C5 --> K5["Calcular días de cobertura<br/>y fecha de quiebre"]
+    P5 --> K5
+    K5 --> G8{"¿Cobertura menor<br/>a la mínima?"}
+    G8 -- No --> F5a(("Fin"))
+    G8 -- Sí --> A5["Emitir alerta con<br/>la compra sugerida"]
+    S5["Sumar el stock y<br/>actualizar el precio"] --> F5b(("Fin"))
+  end
+  subgraph ADM5["Administrador"]
+    direction LR
+    R5["Registrar la compra<br/>del insumo"]
+  end
+  A5 --> R5 --> S5
+  classDef inicio fill:#D6E6C2,stroke:#1F5E2C,stroke-width:2px
+  classDef fin fill:#F3C7BD,stroke:#A33A22,stroke-width:3px
+  classDef compuerta fill:#FBEFC5,stroke:#C98A1B
+  class I5 inicio
+  class F5a,F5b fin
+  class G7,G8 compuerta
+```
+
+**Proceso 6 – Cierre del lote (nuevo):** cuando una pesada indica que el lote alcanzó el peso objetivo, el administrador simula el cierre, revisa el resumen y lo confirma. El lote cerrado queda bloqueado para nuevas cargas y su informe funciona como informe de cierre.
+
+```mermaid
+flowchart LR
+  subgraph ADM6["Administrador"]
+    direction LR
+    I6(("El lote alcanza<br/>el peso objetivo")) --> A6["Ingresar el peso final<br/>y el precio de venta"]
+    G9{"¿Confirma<br/>el cierre?"}
+    D6["Descargar el informe<br/>de cierre (PDF)"] --> F6(("Fin"))
+  end
+  subgraph SIS6["Sistema"]
+    direction LR
+    S6["Simular el cierre y mostrar<br/>el resumen: kg de carne,<br/>costo por kg y margen"]
+    C6["Cerrar el lote y bloquear<br/>nuevas cargas"]
+  end
+  A6 --> S6 --> G9
+  G9 -- No --> A6
+  G9 -- Sí --> C6 --> D6
+  classDef inicio fill:#D6E6C2,stroke:#1F5E2C,stroke-width:2px
+  classDef fin fill:#F3C7BD,stroke:#A33A22,stroke-width:3px
+  classDef compuerta fill:#FBEFC5,stroke:#C98A1B
+  class I6 inicio
+  class F6 fin
+  class G9 compuerta
+```

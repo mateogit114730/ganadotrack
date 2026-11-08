@@ -50,7 +50,7 @@ Además del alcance funcional, se rediseñó toda la interfaz con el estilo **"C
 | Restricciones CHECK / índices | 19 / — | 25 / 16 (incluido un índice único parcial) |
 | Pantallas | 9 | **14** |
 | Casos de uso | 14 | **22** |
-| Issues / commits / tags | — | 29 issues, 7 milestones, 5 tags, CI en verde en `main` y `develop` |
+| Issues / commits / tags | — | 29 issues, 7 milestones, 6 tags, CI en verde en `main` y `develop` |
 | Líneas de código (backend + frontend, sin pruebas) | — | ≈ 7.500 |
 
 ## 17.4 Respuesta a los problemas del relevamiento
@@ -71,7 +71,5 @@ Además del alcance funcional, se rediseñó toda la interfaz con el estilo **"C
 - Separar la lógica de cálculo en funciones puras permitió verificarla con pruebas automáticas (98 % de cobertura en los servicios de dominio), lo que da confianza en los números que el productor usará para decidir.
 - Las reglas críticas se protegen en dos niveles (API y base de datos), de modo que un error de la aplicación no puede dejar el stock o los costos inconsistentes. La carga sin conexión mantiene esa garantía gracias a la idempotencia.
 - La arquitectura en capas por módulo permitió sumar seis funcionalidades nuevas (tres de ellas como módulos nuevos) sin rediseñar lo existente, como se había previsto en RNF05.
-- **Pendientes antes de la entrega:**
-  - Publicar la aplicación online.
-  - Validar el sistema con el productor (envío el 29/10) y confirmar con él el valor de GDP objetivo relevado.
-  - Generar el documento final y la presentación.
+- La aplicación está publicada y en funcionamiento: <https://ganadotrack.vercel.app> (frontend en Vercel, API en Render y base en Neon).
+- **Pendiente:** la validación con el productor no se completó antes de la entrega. El sistema se validó internamente contra los criterios de aceptación (ver "Validación de aceptación" en la estrategia de pruebas) y el material para el productor (videos, acceso de prueba y cuestionario) quedó preparado. Confirmar con él los valores de referencia, en especial la GDP objetivo, es la primera tarea del trabajo futuro.

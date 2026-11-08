@@ -13,6 +13,7 @@ mkdirSync(SALIDA, { recursive: true });
 
 // Nombre de cada diagrama según el archivo y su orden de aparición.
 const NOMBRES = {
+  '10-alcance-y-requerimientos.md': ['bpmn-1-ingreso-lote', 'bpmn-2-alimentacion', 'bpmn-5-abastecimiento', 'bpmn-6-cierre'],
   '14-cronograma.md': ['gantt'],
   '15-arquitectura-y-herramientas.md': ['arquitectura', 'secuencia-alimentacion', 'secuencia-sin-conexion', 'flujo-herramientas', 'despliegue'],
   '16-seguimiento.md': ['flujo-ramas'],

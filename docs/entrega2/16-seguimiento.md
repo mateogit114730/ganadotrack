@@ -32,7 +32,7 @@ Se eligió GitHub Projects porque integra en un mismo lugar el código, las tare
 
 ### Issues del proyecto
 
-| # | Issue | Milestone | Etiquetas | Estado (15/10) |
+| # | Issue | Milestone | Etiquetas | Estado final |
 |---|---|---|---|---|
 | 1 | Correcciones a la 1ª entrega | F0 | docs | Cerrado |
 | 2 | Configurar repositorio, CI y entorno Docker | F0 | infra, test | Cerrado |
@@ -47,10 +47,10 @@ Se eligió GitHub Projects porque integra en un mismo lugar el código, las tare
 | 11 | RF06 – Costos y rentabilidad | F0 | costos, feature, prioridad-alta | Cerrado |
 | 12 | RF07 – Dashboard | F0 | dashboard, feature | Cerrado |
 | 13 | Pruebas automatizadas y E2E | F0 | test | Cerrado |
-| 14 | Validación con el productor | F4 | test | Por hacer |
-| 15 | Documentación y manuales | F5 | docs | En progreso |
-| 16 | Despliegue | F4 | infra | Por hacer |
-| 17 | Presentación final | F5 | docs | Backlog |
+| 14 | Validación con el productor | F4 | test | Abierto (trabajo futuro) |
+| 15 | Documentación y manuales | F5 | docs | Cerrado |
+| 16 | Despliegue | F4 | infra | Cerrado |
+| 17 | Presentación final | F5 | docs | Cerrado |
 | 18 | Rediseño visual "Campo cálido" | F1 | diseno, feature | Cerrado |
 | 19 | Completitud del sistema | F1 | usuarios, feature | Cerrado |
 | 20 | RF09 – Ración por lote y carga en 1 toque | F2 | alimentacion, feature, prioridad-alta | Cerrado |
@@ -60,9 +60,9 @@ Se eligió GitHub Projects porque integra en un mismo lugar el código, las tare
 | 24 | RF13 – Reportes PDF y Excel | F3 | reportes, feature | Cerrado |
 | 25 | RF14 – App instalable y modo sin conexión | F3 | pwa, alimentacion, feature | Cerrado |
 | 26 | Preparación de despliegue y validación | F4 | infra, test | Cerrado |
-| 27 | Documento final en Word y PDF | F5 | docs, prioridad-alta | Backlog |
-| 28 | Capturas y diagramas finales | F5 | docs | Backlog |
-| 29 | Versión final ganadotrack-1.1.1.1 | F6 | infra | Backlog |
+| 27 | Documento final en Word y PDF | F5 | docs, prioridad-alta | Cerrado |
+| 28 | Capturas y diagramas finales | F5 | docs | Cerrado |
+| 29 | Versión final ganadotrack-1.1.1.1 | F6 | infra | Cerrado |
 
 Cada issue incluye la descripción y sus **criterios de aceptación** como lista de verificación. Al cerrarlo, se deja un comentario con el commit que lo resolvió.
 
@@ -145,7 +145,7 @@ Siguiendo la convención de la cátedra, un **valor impar** indica versión libe
 | `ganadotrack-1.0.9.0` | Ración y carga en 1 toque, protocolos sanitarios, proyección de stock (F2) |
 | `ganadotrack-1.1.0.0` | Clima y riesgos, reportes PDF/Excel, PWA sin conexión (F3) |
 | `ganadotrack-1.1.1.0` | Versión candidata para la publicación y la validación con el productor (en `main`, 15/10) |
-| **`ganadotrack-1.1.1.1`** | **Versión final para la entrega del 05/11** |
+| **`ganadotrack-1.1.1.1`** | **Versión final de la entrega (08/11), con release en GitHub** |
 | 1.3.x.x (futuro) | Costos completos, notificaciones, identificación individual |
 
 Los tags se crean con `git tag -a ganadotrack-1.1.1.1 -m "…"` y se publican con `git push origin <tag>`. Las versiones liberadas en `main` tienen además un *release* de GitHub con el detalle de los cambios.

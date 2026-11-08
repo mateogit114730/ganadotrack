@@ -1,6 +1,6 @@
 # 14. Cronograma del trabajo
 
-Período de desarrollo: **08/10/2026 al 05/11/2026** (entrega final).
+Período de desarrollo: **08/10/2026 al 08/11/2026** (versión final). La fecha de entrega prevista era el 05/11/2026.
 La 1ª entrega (análisis, requerimientos, BPMN y casos de uso) se completó en el primer cuatrimestre de 2026.
 
 El trabajo se organizó en dos etapas:
@@ -17,14 +17,14 @@ Las versiones siguen la convención de la cátedra **W.X.Y.Z**: número impar pa
 | F1 – Rediseño y completitud | 16/10 – 19/10 | ✅ 15/10 | Estilo "Campo cálido", perfil, corrección de datos, página 404, ajustes de producción | `1.0.7.0` |
 | F2 – Gestión | 20/10 – 23/10 | ✅ 15/10 | Ración y carga en 1 toque, protocolos sanitarios, proyección de stock | `1.0.9.0` |
 | F3 – Tecnología | 24/10 – 27/10 | ✅ 15/10 | Clima y riesgos, reportes PDF/Excel, PWA con carga sin conexión | `1.1.0.0` |
-| F4 – Pruebas, despliegue y validación | 28/10 – 29/10 | 🟡 En curso | Cobertura ✅, CI en GitHub ✅, publicación online ✅ (15/10), prueba en celular ✅, envío al productor (29/10) | `1.1.1.0` (candidata, 15/10) |
-| F5 – Documentación y entregables | 30/10 – 03/11 | 🟡 En curso | Documentación actualizada, documento final Word/PDF, presentación | — |
-| F6 – Cierre | 04/11 | ⏳ | Ajustes por la validación, versión final y ensayo de la defensa | **`ganadotrack-1.1.1.1`** |
+| F4 – Pruebas, despliegue y validación | 28/10 – 29/10 | ✅ 15/10 · validación pendiente | Cobertura ✅, CI en GitHub ✅, publicación online ✅ (15/10), prueba en celular ✅, validación con el productor ⏳ (pasa a trabajo futuro) | `1.1.1.0` (candidata, 15/10) |
+| F5 – Documentación y entregables | 30/10 – 03/11 | ✅ 08/11 | Documentación actualizada, documento final Word/PDF, presentación | — |
+| F6 – Cierre | 04/11 | ✅ 08/11 | Versión final, release en GitHub y ensayo de la defensa | **`ganadotrack-1.1.1.1`** |
 | Entrega final | 05/11 | — | Documento + repositorio + aplicación + presentación | — |
 
 ## 14.2 Tareas (issues de GitHub)
 
-| # | Tarea | Fase | Fin previsto | Estado al 15/10 |
+| # | Tarea | Fase | Fin previsto | Estado final |
 |---|---|---|---|---|
 | 1 | Correcciones a la 1ª entrega (CU, ER, RF06) | F0 | 09/10 | ✅ Completada |
 | 2 | Repositorio, CI y entorno Docker | F0 | 09/10 | ✅ Completada (CI en verde en GitHub) |
@@ -43,14 +43,14 @@ Las versiones siguen la convención de la cátedra **W.X.Y.Z**: número impar pa
 | 25 | RF14 – App instalable y modo sin conexión | F3 | 27/10 | ✅ Completada |
 | 26 | Preparación de despliegue y validación | F4 | 29/10 | ✅ Completada |
 | 16 | Despliegue online | F4 | 29/10 | ✅ Publicado el 15/10 (Vercel + Render + Neon); prueba de humo y prueba en celular |
-| 14 | Validación con el productor | F4 | 29/10 – 02/11 | ⏳ Material listo; envío el 29/10 |
-| 15 | Documentación y manuales | F5 | 03/11 | 🟡 Actualizada con RF09–RF14 |
+| 14 | Validación con el productor | F4 | 29/10 – 02/11 | ⏳ Pendiente: material preparado (videos, acceso y cuestionario); pasa a trabajo futuro |
+| 15 | Documentación y manuales | F5 | 03/11 | ✅ Completada el 08/11 |
 | 28 | Capturas y diagramas finales | F5 | 26/10 | ✅ Completada el 15/10 (28 capturas, 8 de GitHub y 9 diagramas) |
-| 27 | Documento final en Word y PDF | F5 | 31/10 | ⏳ Pendiente |
-| 17 | Presentación final | F5 | 02/11 | ⏳ Pendiente |
-| 29 | Versión final `ganadotrack-1.1.1.1` | F6 | 04/11 | ⏳ Pendiente |
+| 27 | Documento final en Word y PDF | F5 | 31/10 | ✅ Completada el 08/11 |
+| 17 | Presentación final | F5 | 02/11 | ✅ Completada el 08/11 |
+| 29 | Versión final `ganadotrack-1.1.1.1` | F6 | 04/11 | ✅ Completada el 08/11 |
 
-> El desarrollo avanzó más rápido que lo planificado: las fases F1 a F3, previstas del 16/10 al 27/10, quedaron implementadas y probadas el 15/10. El tiempo ganado se reasigna a la publicación, la validación con el productor y los entregables. La validación tiene fecha fija porque depende de la disponibilidad del productor.
+> El desarrollo avanzó más rápido que lo planificado: las fases F1 a F3, previstas del 16/10 al 27/10, quedaron implementadas y probadas el 15/10. El tiempo ganado se reasignó a la publicación y a la documentación. El cierre (documento final, presentación y versión `ganadotrack-1.1.1.1`) se completó el 08/11, tres días después de lo planificado. La validación con el productor no se completó antes de la entrega, porque depende de su disponibilidad; el material quedó preparado y es la primera tarea del trabajo futuro.
 >
 > El historial de Git se ordenó al publicar el repositorio (15/10); por eso los commits del MVP figuran con esa fecha.
 
@@ -77,16 +77,15 @@ gantt
 
   section F4 Despliegue y validación
   Publicación online               :done, t16, 2026-10-15, 1d
-  Envío al productor               :t14a, 2026-10-29, 1d
-  Respuestas del productor         :t14b, 2026-10-30, 4d
+  Validación con el productor      :active, t14, 2026-10-29, 5d
 
   section F5 Documentación
   Documentación actualizada        :done, t15, 2026-10-15, 1d
   Capturas y diagramas             :done, t28, 2026-10-15, 1d
-  Documento final Word/PDF         :t27, 2026-10-27, 5d
-  Presentación                     :t17, 2026-10-30, 4d
+  Documento final Word/PDF         :done, t27, 2026-11-07, 2d
+  Presentación                     :done, t17, 2026-11-07, 2d
 
   section F6 Cierre
-  Ajustes y versión 1.1.1.1        :t29, 2026-11-03, 2d
-  Entrega final                    :milestone, m6, 2026-11-05, 0d
+  Versión final 1.1.1.1            :done, t29, 2026-11-08, 1d
+  1.1.1.1                          :milestone, m6, 2026-11-08, 0d
 ```

@@ -15,7 +15,7 @@ Varias mejoras previstas en la 2ª entrega se incorporaron a la versión final y
 |---|---|
 | **Costos completos:** valor del animal al ingreso (costo de cría/recría) y otros gastos por lote (energía, combustible, mano de obra, arrendamiento) | Hoy el margen es el **de engorde** y por eso resulta alto. Con estos costos se obtiene el margen real del ciclo. También era un pedido del productor (Bloque 8) |
 | **Notificaciones fuera del sistema** (notificaciones *push* de la PWA, email o WhatsApp) para alertas sanitarias vencidas o próximas, stock por agotarse y riesgos de clima | Hoy las alertas se ven al entrar al sistema; el veterinario y el productor se comunican por WhatsApp (relevamiento) |
-| **Ajustes surgidos de la validación con el productor** | *(Completar con el acta de validación.)* |
+| **Validación con el productor** y ajustes que surjan: confirmar la GDP objetivo, la ración, los precios, el rendimiento al gancho y el protocolo sanitario | El sistema se validó internamente; falta la confirmación del usuario real. El material (videos, acceso de prueba y cuestionario de 8 preguntas) ya está preparado |
 
 ## Mediano plazo (versión 1.3.x.x)
 
