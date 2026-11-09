@@ -114,8 +114,8 @@ t = re.sub(r'Código PlantUML\..*?\n', '', t)
 t = re.sub(r'```plantuml\n.*?```', '![Diagrama de casos de uso de GanadoTrack](../diagramas/casos-de-uso.png)', t, flags=re.S)
 partes.append(t)
 
-# ---------- 14 Cronograma ----------
-partes.append(refs_secciones(diagramas_a_imagen(leer('14-cronograma.md'), '14-cronograma.md')))
+# El cronograma (14-cronograma.md) no se incluye en el documento final: las secciones 15 a 22 se renumeran
+# como 14 a 21 al final (ver renumerar()).
 
 # ---------- 15 Arquitectura y herramientas ----------
 t = diagramas_a_imagen(leer('15-arquitectura-y-herramientas.md'), '15-arquitectura-y-herramientas.md')
@@ -151,6 +151,9 @@ if capturas:
     t = re.sub(r'^(\| .+? \| <http[^|]*> \|) `capturas/github/[\w-]+\.png` \|$', r'\1', t, flags=re.M)
     figuras ='\n\n'.join(f'![{texto}](../{ruta})' for texto, ruta in capturas)
     t = t.replace('**Ejemplo de control de cambios (PR #30):**', figuras + '\n\n**Ejemplo de control de cambios (PR #30):**')
+# Sin la sección de cronograma, los milestones se describen por fase del proyecto.
+t = t.replace('(uno por hito del cronograma)', '(uno por fase del proyecto)')
+t = t.replace('uno por fase del cronograma (sección 14), con su fecha límite', 'uno por fase del proyecto, con su fecha límite')
 partes.append(refs_secciones(t))
 
 # ---------- 21 Resultados ----------
@@ -185,7 +188,21 @@ partes.append(
 
 partes.append(leer('anexo-correcciones.md'))
 
+def renumerar(texto):
+    """Sin el cronograma, las secciones 15 a 22 pasan a ser 14 a 21: títulos y referencias "sección N".
+    En el Anexo V solo se renumera la columna "Sección" (el texto cita la numeración de la 1ª entrega)."""
+    bajar = lambda m: str(int(m.group(0)) - 1)
+    numero = r'\b(?:1[5-9]|2[0-2])\b'
+    def cuerpo(t):
+        t = fuera_de_codigo(t, lambda l: re.sub(r'^(#{1,3}) (' + numero + r')(?=\.)', lambda m: f'{m.group(1)} {int(m.group(2)) - 1}', l))
+        return re.sub(r'(secci[oó]n(?:es)?\s+)(' + numero + r')', lambda m: m.group(1) + str(int(m.group(2)) - 1), t)
+    i = texto.index('# Anexo V:')
+    anexo = re.sub(r'^(\|.*\| )([^|]*)( \|)$', lambda m: m.group(1) + re.sub(numero, bajar, m.group(2)) + m.group(3), texto[i:], flags=re.M)
+    return cuerpo(texto[:i]) + anexo
+
+
 doc = '\n\n'.join(p.strip('\n') for p in partes) + '\n'
+doc = renumerar(doc)
 # Los enlaces relativos de entrega2 apuntan a archivos del repositorio: en el documento quedan como texto.
 doc = re.sub(r'(?<!!)\[([^\]]+)\]\((?!https?://|#)[^)]+\)', r'\1', doc)
 SALIDA.write_text(doc, encoding='utf-8', newline='\n')
