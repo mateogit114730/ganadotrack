@@ -50,7 +50,7 @@ Cada carga recibe en el celular un identificador único (`operacion_id`). Si el 
 Contraseñas con bcrypt, sesión JWT que vence a las 8 h, permisos verificados en el servidor en cada ruta, HTTPS, límite de intentos de login, helmet y validación de todo dato de entrada con Zod. Las credenciales están en variables de entorno, fuera del repositorio.
 
 **¿Validaste el sistema con el usuario?**
-Se validó internamente contra los criterios de aceptación con los escenarios E2E (sección 19.5). La validación con el productor no se completó antes de la entrega; el material (videos, acceso de prueba y cuestionario) está preparado y es la primera tarea del trabajo futuro.
+Se validó internamente contra los criterios de aceptación con los escenarios E2E (sección 18.5). La validación con el productor no se completó antes de la entrega; el material (videos, acceso de prueba y cuestionario) está preparado y es la primera tarea del trabajo futuro.
 
 **¿Qué cambiaste respecto de la 1ª entrega?**
 Las 14 correcciones del Anexo V: numeración y diagrama de casos de uso, fórmulas de costo con cabezas actuales, GDP objetivo por lote, modelo de datos completo, entre otras. Además, el alcance pasó de MVP a sistema terminado, con los RF09 a RF14.
