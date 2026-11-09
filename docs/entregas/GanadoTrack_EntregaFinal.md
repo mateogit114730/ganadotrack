@@ -642,69 +642,9 @@ Los casos CU15 a CU22 se agregaron en la versión final (sistema terminado). Las
 | Flujo alternativo | 2a. **Cambiar contraseña:** ingresa la contraseña actual, la nueva y su repetición → el sistema verifica la actual, guarda la nueva (hash bcrypt) y la sesión sigue activa. |
 | Excepción | 2b. La contraseña actual es incorrecta → error; tras varios intentos se aplica el mismo límite que en el login. 2c. La nueva contraseña tiene menos de 8 caracteres o no coincide con la repetición → error de validación. |
 
-# 14. Cronograma del trabajo
+# 14. Arquitectura y herramientas de desarrollo
 
-Período de desarrollo: **08/10/2026 al 08/11/2026** (versión final). La fecha de entrega prevista era el 05/11/2026.
-La 1ª entrega (análisis, requerimientos, BPMN y casos de uso) se completó en el primer cuatrimestre de 2026.
-
-El trabajo se organizó en dos etapas:
-1. **MVP de la 2ª entrega (08/10):** los 8 requerimientos funcionales originales.
-2. **Sistema terminado (15/10):** al ampliarse el plazo al 05/11, el objetivo pasó de MVP a sistema terminado. Se replanificó en fases F0 a F6, con seis funcionalidades nuevas, rediseño visual, publicación online, validación con el productor y los entregables finales.
-
-## 14.1 Fases, hitos y versiones
-
-Las versiones siguen la convención de la cátedra **W.X.Y.Z**: número impar para versión liberada y par para versión de desarrollo (ver sección 20). Cada fase corresponde a un *milestone* de GitHub.
-
-| Fase | Plan | Real | Contenido | Versión |
-|---|---|---|---|---|
-| F0 – MVP | 08/10 – 16/10 | ✅ 08/10 (repositorio publicado el 15/10) | Base técnica, módulos RF01–RF08, pruebas, documentación de la 2ª entrega | `ganadotrack-1.0.5.0` |
-| F1 – Rediseño y completitud | 16/10 – 19/10 | ✅ 15/10 | Estilo "Campo cálido", perfil, corrección de datos, página 404, ajustes de producción | `1.0.7.0` |
-| F2 – Gestión | 20/10 – 23/10 | ✅ 15/10 | Ración y carga en 1 toque, protocolos sanitarios, proyección de stock | `1.0.9.0` |
-| F3 – Tecnología | 24/10 – 27/10 | ✅ 15/10 | Clima y riesgos, reportes PDF/Excel, PWA con carga sin conexión | `1.1.0.0` |
-| F4 – Pruebas, despliegue y validación | 28/10 – 29/10 | ✅ 15/10 · validación pendiente | Cobertura ✅, CI en GitHub ✅, publicación online ✅ (15/10), prueba en celular ✅, validación con el productor ⏳ (pasa a trabajo futuro) | `1.1.1.0` (candidata, 15/10) |
-| F5 – Documentación y entregables | 30/10 – 03/11 | ✅ 08/11 | Documentación actualizada, documento final Word/PDF, presentación | — |
-| F6 – Cierre | 04/11 | ✅ 08/11 | Versión final, release en GitHub y ensayo de la defensa | **`ganadotrack-1.1.1.1`** |
-| Entrega final | 05/11 | — | Documento + repositorio + aplicación + presentación | — |
-
-## 14.2 Tareas (issues de GitHub)
-
-| # | Tarea | Fase | Fin previsto | Estado final |
-|---|---|---|---|---|
-| 1 | Correcciones a la 1ª entrega (CU, ER, RF06) | F0 | 09/10 | ✅ Completada |
-| 2 | Repositorio, CI y entorno Docker | F0 | 09/10 | ✅ Completada (CI en verde en GitHub) |
-| 3 | Modelo de datos, migraciones, vista y trigger | F0 | 10/10 | ✅ Completada |
-| 4 | RF08 – Autenticación JWT y control de roles | F0 | 12/10 | ✅ Completada |
-| 5–8 | RF01, RF03, RF02, RF04 – Lotes, insumos, alimentación, pesadas | F0 | 19/10 | ✅ Completadas |
-| 9–12 | RF05, CU14, RF06, RF07 – Sanidad, alertas, costos, dashboard | F0 | 26/10 | ✅ Completadas |
-| 13 | Pruebas automatizadas y E2E | F0 | 29/10 | ✅ Completada |
-| 18 | Rediseño visual "Campo cálido" | F1 | 19/10 | ✅ Completada |
-| 19 | Completitud: perfil, correcciones, 404, producción | F1 | 19/10 | ✅ Completada |
-| 20 | RF09 – Ración por lote y carga en 1 toque | F2 | 23/10 | ✅ Completada |
-| 21 | RF10 – Protocolos sanitarios automáticos | F2 | 23/10 | ✅ Completada |
-| 22 | RF11 – Proyección de stock | F2 | 23/10 | ✅ Completada |
-| 23 | RF12 – Clima y riesgos | F3 | 27/10 | ✅ Completada |
-| 24 | RF13 – Reportes PDF y Excel | F3 | 27/10 | ✅ Completada |
-| 25 | RF14 – App instalable y modo sin conexión | F3 | 27/10 | ✅ Completada |
-| 26 | Preparación de despliegue y validación | F4 | 29/10 | ✅ Completada |
-| 16 | Despliegue online | F4 | 29/10 | ✅ Publicado el 15/10 (Vercel + Render + Neon); prueba de humo y prueba en celular |
-| 14 | Validación con el productor | F4 | 29/10 – 02/11 | ⏳ Pendiente: material preparado (videos, acceso y cuestionario); pasa a trabajo futuro |
-| 15 | Documentación y manuales | F5 | 03/11 | ✅ Completada el 08/11 |
-| 28 | Capturas y diagramas finales | F5 | 26/10 | ✅ Completada el 15/10 (28 capturas, 8 de GitHub y 9 diagramas) |
-| 27 | Documento final en Word y PDF | F5 | 31/10 | ✅ Completada el 08/11 |
-| 17 | Presentación final | F5 | 02/11 | ✅ Completada el 08/11 |
-| 29 | Versión final `ganadotrack-1.1.1.1` | F6 | 04/11 | ✅ Completada el 08/11 |
-
-> El desarrollo avanzó más rápido que lo planificado: las fases F1 a F3, previstas del 16/10 al 27/10, quedaron implementadas y probadas el 15/10. El tiempo ganado se reasignó a la publicación y a la documentación. El cierre (documento final, presentación y versión `ganadotrack-1.1.1.1`) se completó el 08/11, tres días después de lo planificado. La validación con el productor no se completó antes de la entrega, porque depende de su disponibilidad; el material quedó preparado y es la primera tarea del trabajo futuro.
->
-> El historial de Git se ordenó al publicar el repositorio (15/10); por eso los commits del MVP figuran con esa fecha.
-
-## 14.3 Diagrama de Gantt
-
-![Diagrama de Gantt: fases, tareas e hitos del proyecto](../diagramas/gantt.png)
-
-# 15. Arquitectura y herramientas de desarrollo
-
-## 15.1 Tipo de arquitectura
+## 14.1 Tipo de arquitectura
 
 GanadoTrack utiliza una **arquitectura cliente-servidor en tres capas**, con el frontend como **aplicación de una sola página (SPA)** y el backend como **API REST organizada en capas y por módulos de negocio**:
 
@@ -730,12 +670,12 @@ Se descartaron otras alternativas:
 - **Microservicios:** agregan complejidad operativa (varios despliegues, comunicación entre servicios) que no se justifica para un establecimiento con un solo productor.
 - **Aplicación monolítica con vistas generadas en el servidor:** acopla la interfaz a la lógica y dificulta una experiencia móvil fluida.
 
-## 15.2 Diagrama de arquitectura
+## 14.2 Diagrama de arquitectura
 
 ![Arquitectura de GanadoTrack: componentes y comunicación](../diagramas/arquitectura.png)
 
 
-## 15.3 Capas y componentes del backend
+## 14.3 Capas y componentes del backend
 
 Cada módulo de `backend/src/modules/` tiene la misma estructura, con una responsabilidad por archivo:
 
@@ -772,7 +712,7 @@ El módulo `reportes/` incluye además `pdf.js`, con los bloques reutilizables d
 | `offline/` | Cola de cargas sin conexión en IndexedDB, detección de conexión y botón de instalación |
 | `theme.js` | Tema "Campo cálido": paleta del logo, tipografías Bitter y Nunito Sans, formas y estados |
 
-## 15.4 Comunicación entre frontend, backend y base de datos
+## 14.4 Comunicación entre frontend, backend y base de datos
 
 ![Secuencia del registro de alimentación diaria (CU04)](../diagramas/secuencia-alimentacion.png)
 
@@ -795,7 +735,7 @@ El módulo `reportes/` incluye además `pdf.js`, con los bloques reutilizables d
 - **Errores de negocio:** si el servidor rechaza la carga (por ejemplo, por stock insuficiente), queda marcada con el motivo para que el encargado la descarte y avise al administrador. No se reintenta indefinidamente.
 - **Service worker:** guarda la aplicación (*app shell*, fuentes e íconos, ≈ 1,9 MB) y aplica la estrategia *NetworkFirst* a las consultas que necesita el encargado: lotes y ración del día (`/alimentacion/opciones`), usuario (`/auth/me`) y clima. Si hay red, usa siempre datos frescos; si no, usa los últimos guardados.
 
-## 15.5 Diseño de la API
+## 14.5 Diseño de la API
 
 API REST con prefijo `/api`, recursos en plural, verbos HTTP estándar y códigos de estado semánticos. El detalle completo está en api.md y en Swagger UI (`/api/docs`).
 
@@ -817,14 +757,14 @@ API REST con prefijo `/api`, recursos en plural, verbos HTTP estándar y código
 
 En total: **54 operaciones** sobre **41 rutas**, todas documentadas en OpenAPI.
 
-## 15.6 Autenticación y autorización
+## 14.6 Autenticación y autorización
 
 - **Autenticación:** el usuario envía email y contraseña a `POST /api/auth/login`. La contraseña se compara con el hash **bcrypt** guardado (RNF04) y, si es correcta, la API emite un **token JWT** firmado (HS256) que incluye el id y el rol del usuario.
 - **Expiración por inactividad (RNF04):** el token vence a las **8 horas**. Mientras el usuario sigue trabajando, cada respuesta incluye un token renovado (encabezado `X-Token-Renovado`) que el frontend guarda automáticamente. Si pasan 8 horas sin actividad, el token vence y el sistema pide iniciar sesión nuevamente.
 - **Autorización por rol (RBAC, RF08):** cada ruta declara los roles permitidos con el middleware `permitir(...)`. El frontend también oculta las opciones no permitidas, pero la restricción real está en el servidor: un encargado que intente llamar a `/api/lotes` recibe `403`.
 - **Usuario desactivado:** en cada petición se verifica que el usuario siga activo, de modo que desactivarlo corta el acceso de inmediato aunque tenga un token vigente.
 
-## 15.7 Consideraciones de seguridad
+## 14.7 Consideraciones de seguridad
 
 | Riesgo | Medida aplicada |
 |---|---|
@@ -844,7 +784,7 @@ En total: **54 operaciones** sobre **41 rutas**, todas documentadas en OpenAPI.
 | Exposición de la ubicación del establecimiento a terceros | El navegador no consulta el servicio de clima directamente: lo hace la API, que solo envía coordenadas |
 | Datos guardados en el celular | La cola sin conexión guarda solo las cargas pendientes (lote, fecha y kg) y las quita al sincronizarlas. Al cerrar sesión se borran del dispositivo el token y los datos del usuario |
 
-## 15.8 Manejo de errores y validación de datos
+## 14.8 Manejo de errores y validación de datos
 
 - **Validación en dos niveles:**
   1. En el **frontend**, campos obligatorios y tipos de entrada numéricos, como ayuda al usuario.
@@ -869,7 +809,7 @@ En total: **54 operaciones** sobre **41 rutas**, todas documentadas en OpenAPI.
 
 - **En la interfaz:** el texto del error se muestra junto al formulario. Si se pierde la conexión, se informa "No se pudo conectar con el servidor", y si la sesión expira, se redirige al login.
 
-## 15.9 Escalabilidad y mantenimiento
+## 14.9 Escalabilidad y mantenimiento
 
 - **Nuevos módulos (RNF05):** agregar, por ejemplo, el módulo "cría" o "identificación por caravana" implica crear una carpeta en `modules/`, sus modelos en `schema.prisma` y una migración. Los módulos existentes no se modifican.
 - **Crecimiento de datos:** índices en las columnas de búsqueda frecuente (`lote.estado`, `registro_alimentacion(lote_id, fecha)`, `evento_sanitario(estado, fecha_programada)`). Con ~5 lotes activos y 2 registros diarios, el volumen anual ronda los 4.000 registros, muy por debajo de la capacidad de PostgreSQL.
@@ -883,7 +823,7 @@ En total: **54 operaciones** sobre **41 rutas**, todas documentadas en OpenAPI.
   - Pruebas automatizadas que se ejecutan en cada cambio (CI).
   - Migraciones versionadas.
 
-## 15.10 Atributos de calidad
+## 14.10 Atributos de calidad
 
 | Atributo | Objetivo | Cómo lo logra la arquitectura | Verificación |
 |---|---|---|---|
@@ -895,7 +835,7 @@ En total: **54 operaciones** sobre **41 rutas**, todas documentadas en OpenAPI.
 | Disponibilidad | ≥ 95 %; carga sin señal | API sin estado en plataforma gestionada, PWA con cola sin conexión, degradación elegante si falla el clima | E2E sin conexión; CP-71, CP-76, CP-77 |
 | Escalabilidad | Agregar módulos sin rediseño | Modularidad por dominio, migraciones aditivas | En la versión final se agregaron 3 módulos (ración, protocolos, clima) sin cambiar la arquitectura ni las capas |
 
-## 15.11 Herramientas y tecnologías
+## 14.11 Herramientas y tecnologías
 
 | Tecnología | Finalidad en el proyecto | Justificación de la elección | Componente | Beneficios |
 |---|---|---|---|---|
@@ -922,7 +862,7 @@ En total: **54 operaciones** sobre **41 rutas**, todas documentadas en OpenAPI.
 | **Prisma ORM 6** | Acceso a datos y migraciones | Define el modelo en un archivo, genera las migraciones SQL versionadas y consultas seguras | Backend / BD | Menos código repetido, esquema versionado en Git, prevención de inyección SQL |
 | **Docker / Docker Compose** | Ejecutar PostgreSQL en desarrollo | Misma base de datos en cualquier PC con un solo comando | Infraestructura | Entorno reproducible, sin instalar Postgres manualmente |
 | **Git + GitHub** | Control de versiones | Estándar de la industria; ramas, *pull requests*, *tags* de versión | Todo el proyecto | Historial de cambios, trazabilidad commit ↔ issue |
-| **GitHub Projects** | Gestión y seguimiento de tareas | Integrado con el repositorio: issues, tablero Kanban, *milestones* | Gestión | Trazabilidad requisito → tarea → commit (ver sección 20) |
+| **GitHub Projects** | Gestión y seguimiento de tareas | Integrado con el repositorio: issues, tablero Kanban, *milestones* | Gestión | Trazabilidad requisito → tarea → commit (ver sección 19) |
 | **Vitest + Supertest** | Pruebas unitarias y de integración | Rápido, compatible con módulos ES; Supertest prueba la API real contra una base de pruebas | Backend y frontend | 118 pruebas automáticas que verifican los RF, con reporte de cobertura (v8) |
 | **fake-indexeddb** | Pruebas de la cola sin conexión | Simula IndexedDB en Node | Frontend (pruebas) | La cola se prueba sin navegador |
 | **Playwright** | Pruebas end-to-end en el navegador | Automatiza el recorrido completo con los tres roles, simula la pérdida de conexión, descarga los reportes y genera capturas y videos | Frontend + Backend | Verificación de la integración completa, del modo sin conexión y del diseño responsive |
@@ -939,7 +879,7 @@ En total: **54 operaciones** sobre **41 rutas**, todas documentadas en OpenAPI.
 
 ![Integración de las herramientas en el proceso de desarrollo](../diagramas/flujo-herramientas.png)
 
-## 15.12 Despliegue
+## 14.12 Despliegue
 
 ![Diagrama de despliegue en producción](../diagramas/despliegue.png)
 
@@ -953,11 +893,11 @@ En total: **54 operaciones** sobre **41 rutas**, todas documentadas en OpenAPI.
 - El plan gratuito de Render "duerme" la API tras 15 minutos sin uso. La primera visita tarda unos 50 s en despertarla. Para evitarlo en horario de trabajo, el flujo `mantener-activa.yml` de GitHub Actions consulta `/api/health` cada 14 minutos en días hábiles.
 - Cada *push* a `main` vuelve a publicar ambos componentes y aplica las migraciones pendientes.
 
-# 16. Modelo de datos
+# 15. Modelo de datos
 
 El modelo se presenta en tres niveles: **conceptual** (entidades del dominio, §1), **lógico** (diagrama entidad-relación con atributos, claves y cardinalidades, §2 a §4) y **físico** (implementación en PostgreSQL, §5).
 
-## 16.1 Modelo conceptual: entidades principales
+## 15.1 Modelo conceptual: entidades principales
 
 | Entidad | Representa | Requerimientos |
 |---|---|---|
@@ -976,7 +916,7 @@ El modelo se presenta en tres niveles: **conceptual** (entidades del dominio, §
 
 Las tres últimas entidades se agregaron en la versión final. Además, INSUMO incorporó el **porcentaje de materia seca** (RF09) y REGISTRO_ALIMENTACION, el **identificador de operación** para la carga sin conexión (RF14).
 
-## 16.2 Modelo lógico: diagrama entidad-relación
+## 15.2 Modelo lógico: diagrama entidad-relación
 
 ![Diagrama entidad-relación: entidades y relaciones de negocio](../diagramas/der-resumido.png)
 
@@ -1003,7 +943,7 @@ Las tres últimas entidades se agregaron en la versión final. Además, INSUMO i
 - **REGISTRO_ALIMENTACION** registra lo que **se entregó**: fecha, kg, precio aplicado y costo.
 - **RACION** registra lo que **se planifica entregar**: kg por cabeza por día y fecha de vigencia.
 
-## 16.3 Normalización
+## 15.3 Normalización
 
 El modelo está en **tercera forma normal (3FN)**:
 - **1FN:** todos los atributos son atómicos; no hay listas dentro de un campo. Por ejemplo, cada insumo entregado en el día es una fila distinta.
@@ -1021,7 +961,7 @@ El modelo está en **tercera forma normal (3FN)**:
 
 Los datos derivados de la versión final tampoco se guardan: los kg del día de la ración, la conversión alimenticia, los días de cobertura y la compra sugerida se calculan en cada consulta.
 
-## 16.4 Diccionario de datos
+## 15.4 Diccionario de datos
 
 Convenciones: claves `SERIAL`; importes en **ARS** (`NUMERIC(14,2)`); pesos y cantidades en **kg**; fechas de negocio `DATE`.
 
@@ -1167,7 +1107,7 @@ Convenciones: claves `SERIAL`; importes en **ARS** (`NUMERIC(14,2)`); pesos y ca
 | horizonte_compra_dias | 14 | Días de consumo que cubre la compra sugerida (RF11) |
 | ubicacion_nombre, ubicacion_latitud, ubicacion_longitud | Pergamino, Buenos Aires (−33,89; −60,57) en los datos de demostración | Localidad del establecimiento para el clima (RF12) |
 
-## 16.5 Modelo físico: implementación en PostgreSQL
+## 15.5 Modelo físico: implementación en PostgreSQL
 
 El esquema se define en `backend/prisma/schema.prisma` y se crea con migraciones SQL versionadas en `backend/prisma/migrations/`:
 
@@ -1205,7 +1145,7 @@ Antes de insertar en `registro_alimentacion`, `pesada` o `baja`, verifica que el
 - Se registra el usuario que realizó cada operación (auditoría).
 - **Respaldo:** en producción se usan los respaldos automáticos de la plataforma. En local, el respaldo se hace con `docker exec ganadotrack-db pg_dump -U ganadotrack ganadotrack > respaldo.sql`.
 
-## 16.6 Consultas de ejemplo
+## 15.6 Consultas de ejemplo
 
 **a) Resumen de los lotes activos** (lo que muestra el dashboard):
 ```sql
@@ -1282,9 +1222,9 @@ ORDER BY fecha DESC;
 
 Estas consultas se pueden ejecutar con `docker exec -it ganadotrack-db psql -U ganadotrack` o desde Prisma Studio (`npm run db:studio`).
 
-# 17. Módulos implementados
+# 16. Módulos implementados
 
-El sistema se organiza en módulos funcionales. Cada uno responde a uno o más requerimientos y existe en las tres capas de la arquitectura: una o más pantallas en el frontend, un módulo en `backend/src/modules/` (rutas → controlador → servicio → esquema) y sus tablas en la base de datos. Los cálculos que comparten varios módulos están en los servicios de dominio de `backend/src/services/` (sección 15.3).
+El sistema se organiza en módulos funcionales. Cada uno responde a uno o más requerimientos y existe en las tres capas de la arquitectura: una o más pantallas en el frontend, un módulo en `backend/src/modules/` (rutas → controlador → servicio → esquema) y sus tablas en la base de datos. Los cálculos que comparten varios módulos están en los servicios de dominio de `backend/src/services/` (sección 14.3).
 
 Tabla: Módulos implementados, requerimientos que cubren y componentes en cada capa
 
@@ -1303,7 +1243,7 @@ Tabla: Módulos implementados, requerimientos que cubren y componentes en cada c
 | Reportes | Informe de lote y de cierre en PDF, reporte mensual, planilla Excel | RF13 | Reportes y Detalle del lote (admin) | `reportes` | todas (solo lectura) |
 | Configuración | Parámetros: rendimiento al gancho, días de aviso, cobertura mínima, ubicación | RF04–RF06, RF11, RF12 | Configuración (admin) | `parametros` | `parametro` |
 
-## 17.1 Integración entre módulos
+## 16.1 Integración entre módulos
 
 Los módulos no trabajan aislados: varias operaciones atraviesan más de uno, siempre dentro de una transacción para que los datos queden consistentes.
 
@@ -1314,7 +1254,7 @@ Los módulos no trabajan aislados: varias operaciones atraviesan más de uno, si
 - **Clima → Alertas:** el riesgo alto de garrapata genera alertas solo para los lotes sin tratamiento en los últimos 21 días (CP-70).
 - **Pesadas → Alertas y Cierre:** una GDP baja genera una alerta; una pesada que alcanza el peso objetivo sugiere el cierre (CP-24 y CP-25).
 
-## 17.2 Reglas de negocio relevantes
+## 16.2 Reglas de negocio relevantes
 
 Tabla: Reglas de negocio y dónde se garantizan
 
@@ -1330,14 +1270,14 @@ Tabla: Reglas de negocio y dónde se garantizan
 | Un evento realizado no se puede modificar | Servicio |
 | Cada rol accede solo a sus funciones | Middleware `permitir(...)` en cada ruta |
 
-# 18. Descripción de la API
+# 17. Descripción de la API
 
 - **Base:** `/api` (en local: `http://localhost:4000/api`; en producción: `https://ganadotrack-api.onrender.com/api`)
 - **Formato:** JSON · fechas `AAAA-MM-DD` · pesos en kg · importes en ARS. Los reportes devuelven archivos PDF o Excel.
 - **Documentación interactiva:** `/api/docs` (Swagger UI). La especificación OpenAPI 3 está en `backend/src/docs/openapi.yaml`: 41 rutas y 54 operaciones.
 - **Autenticación:** encabezado `Authorization: Bearer <token>`, obtenido con `POST /auth/login`. El token vence a las 8 h sin actividad; las respuestas pueden traer un token renovado en `X-Token-Renovado`.
 
-## 18.1 Endpoints
+## 17.1 Endpoints
 
 Los marcados con ★ se agregaron en la versión final.
 
@@ -1395,7 +1335,7 @@ Los marcados con ★ se agregaron en la versión final.
 | GET | `/parametros` · PUT `/parametros/:clave` | ADMIN | Rendimiento, días de aviso, cobertura mínima ★ y horizonte de compra ★ | — |
 | GET | `/health` | Público | Estado de la API y de la base de datos | — |
 
-## 18.2 Ejemplo: ración sugerida para el encargado (CU16)
+## 17.2 Ejemplo: ración sugerida para el encargado (CU16)
 
 `GET /api/alimentacion/opciones` (fragmento):
 
@@ -1419,7 +1359,7 @@ Los marcados con ★ se agregaron en la versión final.
 
 `kgDia` = `kgCabezaDia` × `cabezasActuales` (1,5 × 118 = 177). El botón "Confirmar ración de hoy" envía esos kg en un `POST /alimentacion`.
 
-## 18.3 Ejemplo: registrar alimentación (CU04 / CU21)
+## 17.3 Ejemplo: registrar alimentación (CU04 / CU21)
 
 ```http
 POST /api/alimentacion
@@ -1453,7 +1393,7 @@ Respuesta `409 Conflict` (stock insuficiente; no se guarda nada):
 { "error": "Stock insuficiente de Suplemento proteico 18%: hay 1.323 kg disponibles" }
 ```
 
-## 18.4 Ejemplo: clima y riesgos (CU19)
+## 17.4 Ejemplo: clima y riesgos (CU19)
 
 `GET /api/clima` (fragmento; el pronóstico trae 7 días):
 
@@ -1475,7 +1415,7 @@ Respuesta `409 Conflict` (stock insuficiente; no se guarda nada):
 
 Si el servicio externo no responde, la respuesta es `200` con `"disponible": false`, y el resto del sistema sigue funcionando.
 
-## 18.5 Ejemplo: indicadores de un lote (`GET /api/lotes/2`)
+## 17.5 Ejemplo: indicadores de un lote (`GET /api/lotes/2`)
 
 ```json
 {
@@ -1493,7 +1433,7 @@ Si el servicio externo no responde, la respuesta es `200` con `"disponible": fal
 }
 ```
 
-## 18.6 Códigos de error
+## 17.6 Códigos de error
 
 | Código | Significado |
 |---|---|
@@ -1505,9 +1445,9 @@ Si el servicio externo no responde, la respuesta es `200` con `"disponible": fal
 | 429 | Demasiados intentos de login o de cambio de contraseña |
 | 500 | Error interno |
 
-# 19. Estrategia de pruebas y validación
+# 18. Estrategia de pruebas y validación
 
-## 19.1 Estrategia
+## 18.1 Estrategia
 
 | Tipo de prueba | Qué verifica | Herramienta | Cantidad | Ubicación |
 |---|---|---|---|---|
@@ -1540,9 +1480,9 @@ frontend  Test Files   1 passed (1)       Tests    6 passed (6)
 
 Las líneas sin cubrir corresponden sobre todo a ramas de error poco probables (por ejemplo, fallas de red en el servicio de clima ya cubiertas por el caso general) y a controladores triviales.
 
-## 19.2 Casos de prueba
+## 18.2 Casos de prueba
 
-Los identificadores **CP-xx** coinciden con el nombre de cada prueba automatizada en el código (`it('CP-10 …')`), lo que permite rastrear cada caso hasta su implementación. La columna **Observaciones** registra las incidencias detectadas: cuando un caso se relaciona con un error encontrado durante el desarrollo, remite a su número en la sección 19.3.
+Los identificadores **CP-xx** coinciden con el nombre de cada prueba automatizada en el código (`it('CP-10 …')`), lo que permite rastrear cada caso hasta su implementación. La columna **Observaciones** registra las incidencias detectadas: cuando un caso se relaciona con un error encontrado durante el desarrollo, remite a su número en la sección 18.3.
 
 Condición inicial común a CP-01 a CP-37: base de pruebas vacía, con un usuario por rol, dos insumos (suplemento: 1.000 kg a $ 400/kg, mínimo 500 kg; silaje: 20.000 kg a $ 40/kg) y un lote de 100 animales ingresado hace 30 días con 380 kg (objetivo 420 kg, GDP objetivo 0,45).
 
@@ -1715,7 +1655,7 @@ Las pruebas unitarias (42) verifican con valores calculados a mano cada fórmula
 - La compra sugerida se redondea a múltiplos de 100 kg.
 - Un ítem de protocolo "día 21, cada 21 días, 3 aplicaciones" genera los días 21, 42 y 63.
 
-## 19.3 Incidencias detectadas y corregidas durante el desarrollo
+## 18.3 Incidencias detectadas y corregidas durante el desarrollo
 
 | # | Incidencia | Detectada por | Corrección |
 |---|---|---|---|
@@ -1734,7 +1674,7 @@ Las pruebas unitarias (42) verifican con valores calculados a mano cada fórmula
 | 13 | El primer *build* de la PWA guardaba 3,1 MB en el teléfono (fuentes de alfabetos que no se usan y el logo en alta resolución) | Build de Vite | Se excluyeron esas fuentes y se generó un logo de 420 px: 1,9 MB |
 | 14 | La CI en GitHub fallaba en la instalación: el *lockfile* no era válido para npm 10 (Node 22) y ESLint marcaba un script de Node | Primera ejecución de GitHub Actions | *Lockfile* regenerado para npm 10 y 11, Node 24 en CI y Render, *globals* de Node para los scripts (PR #30) |
 
-## 19.4 Matriz de trazabilidad
+## 18.4 Matriz de trazabilidad
 
 | Requerimiento | Casos de uso | Endpoints | Pantalla | Pruebas |
 |---|---|---|---|---|
@@ -1757,7 +1697,7 @@ Las pruebas unitarias (42) verifican con valores calculados a mano cada fórmula
 | RNF04 Seguridad | CU01 | todos | — | CP-01–09, 46, 55, 75 |
 | RNF07 Operación sin conexión | CU21 | `POST /alimentacion` | Comida de hoy | CP-76, 77, 84 |
 
-## 19.5 Validación de aceptación
+## 18.5 Validación de aceptación
 
 Los criterios de aceptación se definieron desde el punto de vista de cada usuario. Se verificaron **internamente**: el alumno ejecutó los escenarios de cada rol con los recorridos E2E sobre los datos de demostración, en escritorio y en un celular de 390 px. La **confirmación del productor** no se completó antes de la entrega, porque depende de su disponibilidad. Para hacerla quedaron preparados tres videos de demostración (encargado en el celular, productor y veterinario), un acceso de prueba a la aplicación publicada y un cuestionario de 8 preguntas (`docs/entregas/validacion-productor.md`).
 
@@ -1771,7 +1711,7 @@ Los criterios de aceptación se definieron desde el punto de vista de cada usuar
 
 **Conclusión:** el sistema cumple los criterios que se pueden verificar sin el usuario real. Falta que el productor confirme que la información le resulta útil y que valide los valores de referencia, en especial la GDP objetivo: el valor relevado (380 → 420 kg en unos 95 días, ≈ 0,42 kg/día) es bajo para un feedlot. Como la GDP objetivo se carga por lote, corregirla no requiere cambios en el sistema.
 
-## 19.6 Análisis de resultados y mejoras identificadas
+## 18.6 Análisis de resultados y mejoras identificadas
 
 - Todas las funcionalidades pasan sus pruebas: 118 automatizadas y 18 pasos E2E. Las reglas críticas están cubiertas por pruebas automáticas y además protegidas en la base de datos: atomicidad del stock, bloqueo de lotes cerrados, permisos por rol, alta de lote con su protocolo e idempotencia de la carga sin conexión.
 - Las mejoras identificadas en la 2ª entrega se incorporaron:
@@ -1784,28 +1724,28 @@ Los criterios de aceptación se definieron desde el punto de vista de cada usuar
   - Ejecutar los recorridos E2E dentro del pipeline de CI.
   - Pruebas con conexión lenta (simulando la red del campo) y en celulares de gama baja.
 
-# 20. Seguimiento del proyecto (GitHub Projects)
+# 19. Seguimiento del proyecto (GitHub Projects)
 
-## 20.1 Herramientas
+## 19.1 Herramientas
 
 | Necesidad | Herramienta |
 |---|---|
 | Control de versiones del código y la documentación | **Git**, con el repositorio remoto en **GitHub** |
 | Gestión y seguimiento de tareas | **GitHub Projects** (tablero Kanban) + **Issues** |
-| Planificación por hitos | **Milestones** de GitHub (uno por hito del cronograma) |
+| Planificación por hitos | **Milestones** de GitHub (uno por fase del proyecto) |
 | Verificación automática de cada cambio | **GitHub Actions** (lint + pruebas + build) |
 | Identificación de versiones | **Tags** de Git |
 
 Se eligió GitHub Projects porque integra en un mismo lugar el código, las tareas y las versiones. Así, la **trazabilidad** que pide la cátedra (requisito → tarea → código → prueba) se obtiene con enlaces automáticos y sin herramientas externas.
 
-## 20.2 Organización de las tareas
+## 19.2 Organización de las tareas
 
 - **Un issue por requerimiento o tarea.** El título lleva el código del requerimiento, por ejemplo: `#7 RF02 – Registro de alimentación diaria`. La descripción incluye los criterios de aceptación tomados del caso de uso.
 - **Etiquetas (labels)**, con los colores del logo:
   - Por módulo: `lotes`, `alimentacion`, `insumos`, `pesadas`, `sanidad`, `costos`, `dashboard`, `usuarios`, `clima`, `reportes`, `pwa`, `diseno`, `infra`.
   - Por tipo: `feature`, `bug`, `docs`, `test`.
   - Por prioridad: `prioridad-alta`.
-- **Milestones:** uno por fase del cronograma (sección 14), con su fecha límite:
+- **Milestones:** uno por fase del proyecto, con su fecha límite:
   - `F0 MVP – ganadotrack-1.0.5.0`
   - `F1 Rediseño y completitud – 1.0.7.0`
   - `F2 Gestión – 1.0.9.0`
@@ -1852,7 +1792,7 @@ Se eligió GitHub Projects porque integra en un mismo lugar el código, las tare
 
 Cada issue incluye la descripción y sus **criterios de aceptación** como lista de verificación. Al cerrarlo, se deja un comentario con el commit que lo resolvió.
 
-## 20.3 Flujo de ramas
+## 19.3 Flujo de ramas
 
 ![Flujo de ramas del repositorio](../diagramas/flujo-ramas.png)
 
@@ -1868,9 +1808,9 @@ Cada issue incluye la descripción y sus **criterios de aceptación** como lista
 **Reglas:**
 - No se hacen commits directos a `main`.
 - Todo *pull request* debe pasar el pipeline de GitHub Actions (lint + 118 pruebas con cobertura + build) antes de integrarse.
-- Al ser un proyecto individual, la revisión del *pull request* la hace el propio autor con el checklist de la sección 20.6.
+- Al ser un proyecto individual, la revisión del *pull request* la hace el propio autor con el checklist de la sección 19.6.
 
-## 20.4 Convención de commits (trazabilidad)
+## 19.4 Convención de commits (trazabilidad)
 
 Cada commit referencia el issue que resuelve, como se vio en clase:
 
@@ -1882,7 +1822,7 @@ git commit -m "#11 - Fix: el costo por kg descuenta las bajas"
 
 GitHub convierte `#7` en un enlace al issue. Desde el issue se ven todos los commits que lo implementaron y desde cada commit se llega al requerimiento. La matriz de trazabilidad completa (RF → CU → endpoint → prueba) está en pruebas.md.
 
-## 20.5 Versionado
+## 19.5 Versionado
 
 Nomenclatura: **`ganadotrack-W.X.Y.Z`**
 
@@ -1918,7 +1858,7 @@ Los tags se crean con `git tag -a ganadotrack-1.1.1.1 -m "…"` y se publican co
 | Documento de entrega (Word/PDF) y presentación | Git (copia por versión) | `docs/entregas/` |
 | Configuración de despliegue | Git | `render.yaml`, `frontend/vercel.json` |
 
-## 20.6 Checklist de revisión de cada pull request
+## 19.6 Checklist de revisión de cada pull request
 
 - [ ] El título y los commits referencian el issue (`#n`).
 - [ ] Pasa el pipeline de CI (lint, pruebas con cobertura y build).
@@ -1927,7 +1867,7 @@ Los tags se crean con `git tag -a ganadotrack-1.1.1.1 -m "…"` y se publican co
 - [ ] Si cambia la API, se actualizó `openapi.yaml`.
 - [ ] No incluye credenciales ni archivos `.env`.
 
-## 20.7 Evidencias
+## 19.7 Evidencias
 
 Repositorio publicado el 15/10/2026: <https://github.com/mateogit114730/ganadotrack>.
 
@@ -1966,9 +1906,9 @@ Repositorio publicado el 15/10/2026: <https://github.com/mateogit114730/ganadotr
 
 Así se ve el flujo completo: issue → rama → commit `#2 - …` → PR → CI → *merge*.
 
-# 21. Resultados obtenidos y conclusiones
+# 20. Resultados obtenidos y conclusiones
 
-## 21.1 Producto desarrollado
+## 20.1 Producto desarrollado
 
 GanadoTrack pasó de MVP a **sistema terminado**: una aplicación web instalable que cubre los **14 requerimientos funcionales** y los **22 casos de uso**, con frontend, backend y base de datos integrados, pruebas automatizadas y la configuración para publicarla en internet.
 
@@ -1994,7 +1934,7 @@ Además del alcance funcional, se rediseñó toda la interfaz con el estilo **"C
 - Hay ilustraciones propias (paisaje, alambrado, silueta Angus).
 - La pantalla del encargado tiene botones grandes y un modo de alto contraste para usar a pleno sol.
 
-## 21.2 Cumplimiento de los requerimientos no funcionales
+## 20.2 Cumplimiento de los requerimientos no funcionales
 
 | RNF | Exigencia | Resultado medido |
 |---|---|---|
@@ -2006,7 +1946,7 @@ Además del alcance funcional, se rediseñó toda la interfaz con el estilo **"C
 | RNF06 Mantenibilidad | Cálculos comentados, estructura estándar | ✅ Funciones de cálculo puras y documentadas; ESLint; CI con cobertura del 88 % |
 | RNF07 Operación sin conexión | Carga sin señal, sin duplicados | ✅ Cola local + identificador de operación; probado de punta a punta (CP-84) |
 
-## 21.3 Métricas del proyecto
+## 20.3 Métricas del proyecto
 
 | Métrica | MVP (2ª entrega) | Versión final |
 |---|---|---|
@@ -2021,7 +1961,7 @@ Además del alcance funcional, se rediseñó toda la interfaz con el estilo **"C
 | Issues / commits / tags | — | 29 issues, 7 milestones, 6 tags, CI en verde en `main` y `develop` |
 | Líneas de código (backend + frontend, sin pruebas) | — | ≈ 7.500 |
 
-## 21.4 Respuesta a los problemas del relevamiento
+## 20.4 Respuesta a los problemas del relevamiento
 
 | Problema relevado | Respuesta de GanadoTrack |
 |---|---|
@@ -2033,7 +1973,7 @@ Además del alcance funcional, se rediseñó toda la interfaz con el estilo **"C
 | Veterinario comunicado solo por WhatsApp | El veterinario carga los eventos, define los protocolos y la ración directamente en el sistema |
 | Información para el contador | Planilla Excel con una hoja por tipo de dato |
 
-## 21.5 Conclusiones
+## 20.5 Conclusiones
 
 - El sistema resuelve las dos necesidades principales del productor: conocer el costo por kg de carne y no perder el control sanitario. Las funcionalidades agregadas atacan la causa del problema sanitario relevado: el calendario se arma solo y el clima anticipa el riesgo de garrapata.
 - Separar la lógica de cálculo en funciones puras permitió verificarla con pruebas automáticas (98 % de cobertura en los servicios de dominio), lo que da confianza en los números que el productor usará para decidir.
@@ -2042,7 +1982,7 @@ Además del alcance funcional, se rediseñó toda la interfaz con el estilo **"C
 - La aplicación está publicada y en funcionamiento: <https://ganadotrack.vercel.app> (frontend en Vercel, API en Render y base en Neon).
 - **Pendiente:** la validación con el productor no se completó antes de la entrega. El sistema se validó internamente contra los criterios de aceptación (ver "Validación de aceptación" en la estrategia de pruebas) y el material para el productor (videos, acceso de prueba y cuestionario) quedó preparado. Confirmar con él los valores de referencia, en especial la GDP objetivo, es la primera tarea del trabajo futuro.
 
-# 22. Trabajo futuro
+# 21. Trabajo futuro
 
 Funcionalidades que quedaron fuera de la versión final (ver Límites) y mejoras detectadas durante el desarrollo, ordenadas por prioridad.
 
@@ -2053,7 +1993,7 @@ Varias mejoras previstas en la 2ª entrega se incorporaron a la versión final y
 - Conversión alimenticia (RF09).
 - Planificación ante sequía (RF11 y RF12).
 
-## 22.1 Corto plazo (versión 1.1.3.x)
+## 21.1 Corto plazo (versión 1.1.3.x)
 
 | Mejora | Motivo |
 |---|---|
@@ -2061,7 +2001,7 @@ Varias mejoras previstas en la 2ª entrega se incorporaron a la versión final y
 | **Notificaciones fuera del sistema** (notificaciones *push* de la PWA, email o WhatsApp) para alertas sanitarias vencidas o próximas, stock por agotarse y riesgos de clima | Hoy las alertas se ven al entrar al sistema; el veterinario y el productor se comunican por WhatsApp (relevamiento) |
 | **Validación con el productor** y ajustes que surjan: confirmar la GDP objetivo, la ración, los precios, el rendimiento al gancho y el protocolo sanitario | El sistema se validó internamente; falta la confirmación del usuario real. El material (videos, acceso de prueba y cuestionario de 8 preguntas) ya está preparado |
 
-## 22.2 Mediano plazo (versión 1.3.x.x)
+## 21.2 Mediano plazo (versión 1.3.x.x)
 
 | Mejora | Motivo |
 |---|---|
@@ -2070,7 +2010,7 @@ Varias mejoras previstas en la 2ª entrega se incorporaron a la versión final y
 | **Ración por fórmula** (porcentajes de la dieta y ajuste automático por peso) | Hoy la ración se define en kg por cabeza; con el peso promedio se podría calcular según el consumo esperado (% del peso vivo) |
 | **Historial de precios de los insumos** y comparación entre lotes | Analizar cómo influye el precio del suplemento en el costo por kg |
 
-## 22.3 Largo plazo (versión 2.x)
+## 21.3 Largo plazo (versión 2.x)
 
 | Mejora | Motivo |
 |---|---|
@@ -2079,7 +2019,7 @@ Varias mejoras previstas en la 2ª entrega se incorporaron a la versión final y
 | **Multiestablecimiento** (varios productores en la misma plataforma) | Modelo de negocio con suscripción (el productor valoró pagar ≈ $ 100.000/mes) |
 | **Aplicación nativa** o integración con balanzas electrónicas | Cargar las pesadas directamente desde la balanza |
 
-## 22.4 Mejoras técnicas
+## 21.4 Mejoras técnicas
 
 - Pruebas de componentes React (Testing Library) y recorridos E2E dentro del pipeline de CI.
 - Plan pago o servidor propio para evitar la demora de la primera visita (el plan gratuito "duerme" la API).
@@ -2386,7 +2326,7 @@ En producción, Neon guarda el historial de la base y permite restaurarla a un m
 
 ## Despliegue online
 
-Arquitectura de producción: frontend en **Vercel**, API en **Render** y base de datos en **Neon**, todo en planes gratuitos y con HTTPS (ver la sección 15.12). La configuración está versionada en el repositorio:
+Arquitectura de producción: frontend en **Vercel**, API en **Render** y base de datos en **Neon**, todo en planes gratuitos y con HTTPS (ver la sección 14.12). La configuración está versionada en el repositorio:
 
 | Archivo | Qué define |
 |---|---|
@@ -2709,7 +2649,7 @@ Todas las pantallas se adaptan al celular. En el caso del administrador y del ve
 
 # Anexo IV: Material para la validación con el productor
 
-La validación con el productor no se completó antes de la entrega (ver sección 19.5). Para hacerla se prepararon tres videos de demostración generados con Playwright (el encargado en el celular, el productor y el veterinario), un acceso de prueba a la aplicación publicada y el siguiente cuestionario, que se enviará por WhatsApp. Sus respuestas se usarán para ajustar los valores de referencia del sistema.
+La validación con el productor no se completó antes de la entrega (ver sección 18.5). Para hacerla se prepararon tres videos de demostración generados con Playwright (el encargado en el celular, el productor y el veterinario), un acceso de prueba a la aplicación publicada y el siguiente cuestionario, que se enviará por WhatsApp. Sus respuestas se usarán para ajustar los valores de referencia del sistema.
 
 ## Cuestionario (8 preguntas)
 
@@ -2736,11 +2676,11 @@ Tabla: Correcciones aplicadas a la 1ª entrega
 | 4 | En la ficha de pesada, "el peso supera el objetivo" figuraba como excepción | Pasó a flujo alternativo; se agregaron las excepciones reales (fecha y peso inválidos) | 13.4 (CU07) |
 | 5 | La entrevista decía 8 bloques pero eran 9 (0 a 8), y el Bloque 0 no estaba transcripto | Texto corregido y Bloque 0 agregado | 9.3 y Anexo I |
 | 6 | Redacción confusa en el primer hallazgo | Redacción corregida | 9.4 |
-| 7 | El título de la sección 16 no coincidía con el índice | Título unificado: "Seguimiento del proyecto (GitHub Projects)" | 20 |
+| 7 | El título de la sección 16 no coincidía con el índice | Título unificado: "Seguimiento del proyecto (GitHub Projects)" | 19 |
 | 8 | Las fórmulas de costo por kg y margen usaban la cantidad de ingreso (sin restar las bajas) y no aclaraban que el costo es solo de engorde | Cabezas actuales = ingreso − bajas; "costo de engorde" y "margen de engorde"; límite del costo del animal al ingreso | 10 (RF06) y 7 |
 | 9 | La GDP objetivo no tenía dónde configurarse | Campo GDP objetivo en el lote | 10 (RF01) |
 | 10 | Se controlaba stock de suplemento aunque el productor dijo no stockearlo | Justificación: la compra semanal genera un stock de corto plazo | 9.4 |
 | 11 | El silaje se registraba en toneladas y la alimentación en kg | Todo en kg; el silaje se muestra además en toneladas | 10 (RF03) |
-| 12 | El pedido de cargar gastos de servicios no figuraba en ningún lado | Agregado a Límites y a Trabajo futuro | 7 y 22 |
+| 12 | El pedido de cargar gastos de servicios no figuraba en ningún lado | Agregado a Límites y a Trabajo futuro | 7 y 21 |
 | 13 | Los importes no indicaban la moneda | Todos los importes en ARS | 8 y 9.2 |
-| 14 | El diagrama entidad-relación estaba incompleto (campos del lote, auditoría, estado de los eventos, parámetros) | Modelo de datos rehecho con diccionario de datos | 16 |
+| 14 | El diagrama entidad-relación estaba incompleto (campos del lote, auditoría, estado de los eventos, parámetros) | Modelo de datos rehecho con diccionario de datos | 15 |
